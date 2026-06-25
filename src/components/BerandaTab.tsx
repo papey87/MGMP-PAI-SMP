@@ -95,47 +95,60 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-500 rounded-full opacity-10 blur-3xl -ml-16 -mb-16"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_var(--tw-gradient-stops))] from-amber-500/10 via-transparent to-transparent bg-[#0e744c] border-[#0e744c]"></div>
  
-        <div 
-          className="relative px-6 py-8 md:py-10 md:px-10 max-w-4xl space-y-4 bg-[#0e744c]"
-          style={{ width: "627.2px", height: "297.8px", maxWidth: "100%", maxHeight: "100%" }}
-        >
-          <span 
-            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-amber-400/20 text-amber-300 border border-amber-400/30"
-            style={{ fontSize: "14px" }}
-          >
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-            Portal Komunitas Guru PAI SMP
-          </span>
-          <h1 
-            className="font-extrabold tracking-tight leading-tight"
-            style={{ fontSize: "30px" }}
-          >
-            Mewujudkan Generasi <br />
-            <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-400 bg-clip-text text-transparent">
-              Cerdas, Berkarakter & Beradab
+        <div className="relative px-6 py-10 md:py-12 md:px-12 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+          {/* Left Column: Title and Description */}
+          <div className="lg:col-span-8 space-y-4">
+            <span 
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-400/20 text-amber-300 border border-amber-400/30 shadow-sm animate-fade-in"
+              style={{ fontSize: "13px" }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+              Portal Komunitas Guru PAI SMP Kab. Subang
             </span>
-          </h1>
-          <p className="text-emerald-100 text-xs md:text-sm leading-relaxed max-w-2xl">
-            Selamat datang di Portal Resmi Musyawarah Guru Mata Pelajaran (MGMP) Pendidikan Agama Islam SMP. 
-            Wadah kolaborasi, berbagi perangkat ajar Kurikulum Merdeka, peningkatan kompetensi guru PAI, 
-            dan integrasi kecerdasan buatan dalam pembelajaran Islam abad 21.
-          </p>
-          <div className="flex flex-wrap gap-2.5 pt-2">
+            <h1 
+              className="font-extrabold tracking-tight leading-tight"
+              style={{ fontSize: "30px" }}
+            >
+              Mewujudkan Generasi <br />
+              <span className="bg-gradient-to-r from-amber-200 via-amber-300 to-amber-400 bg-clip-text text-transparent">
+                Cerdas, Berkarakter & Beradab
+              </span>
+            </h1>
+            <p className="text-emerald-100 text-xs md:text-sm leading-relaxed max-w-2xl">
+              Selamat datang di Portal Resmi Musyawarah Guru Mata Pelajaran (MGMP) Pendidikan Agama Islam SMP Kabupaten Subang. 
+              Wadah kolaborasi, berbagi perangkat ajar Kurikulum Merdeka, peningkatan kompetensi guru PAI, 
+              dan integrasi kecerdasan buatan dalam pembelajaran Islam abad 21.
+            </p>
+          </div>
+
+          {/* Right Column: Actions (Far Right, not in center) */}
+          <div className="lg:col-span-4 flex flex-col sm:flex-row lg:flex-col gap-3 lg:items-stretch lg:justify-center bg-emerald-950/40 p-5 rounded-2xl border border-emerald-500/25 backdrop-blur-sm self-center w-full">
+            <div className="text-[10px] font-bold text-amber-400 uppercase tracking-widest text-center lg:text-left mb-1 opacity-95">
+              Akses Cepat Portal
+            </div>
+            
             <button 
               id="btn-download-apk"
               onClick={() => setIsApkModalOpen(true)}
-              className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-emerald-950 px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-all duration-200 cursor-pointer"
+              className="flex-1 inline-flex items-center justify-between gap-3 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-emerald-950 px-5 py-3 rounded-xl text-xs font-black shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
             >
-              Unduh APK MGMP
-              <Smartphone className="w-4 h-4" />
+              <span className="flex items-center gap-2">
+                <Smartphone className="w-4 h-4 shrink-0 text-emerald-950" />
+                Unduh APK Android
+              </span>
+              <span className="bg-emerald-950/10 px-2 py-0.5 rounded text-[9px] font-bold">V1.2</span>
             </button>
+
             <button 
               id="btn-try-ai"
               onClick={() => onChangeTab("ai-sobat")}
-              className="inline-flex items-center gap-1.5 bg-emerald-800/80 hover:bg-emerald-800 border border-emerald-600/50 text-emerald-50 px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200"
+              className="flex-1 inline-flex items-center justify-between gap-3 bg-emerald-800 hover:bg-emerald-700 active:bg-emerald-900 border border-emerald-600/50 text-white px-5 py-3 rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all active:scale-95 cursor-pointer"
             >
-              Coba AI Sobat Guru
-              <span className="text-[9px] bg-amber-400 text-emerald-950 font-extrabold px-1 py-0.5 rounded">NEW</span>
+              <span className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 shrink-0 text-amber-400 animate-pulse" />
+                Coba AI Sobat Guru
+              </span>
+              <span className="bg-amber-400 text-emerald-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow">BARU</span>
             </button>
           </div>
         </div>
