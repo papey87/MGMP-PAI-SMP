@@ -71,7 +71,7 @@ export default function ProfilTab() {
   const [activeTab, setActiveTab] = useState<"visimisi" | "struktur">("visimisi");
 
   // Admin Detection State
-  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem("admin_is_simulated") === "true");
+  const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem("admin_portal_access") === "true");
 
   // Local Editable States
   const [profileVisi, setProfileVisi] = useState(() => localStorage.getItem("mgmp_profile_visi") || INITIAL_VISI);
@@ -113,7 +113,7 @@ export default function ProfilTab() {
   // Storage updates listening
   useEffect(() => {
     const handleStorageChange = () => {
-      setIsAdmin(localStorage.getItem("admin_is_simulated") === "true");
+      setIsAdmin(localStorage.getItem("admin_portal_access") === "true");
     };
     window.addEventListener("storage", handleStorageChange);
     const interval = setInterval(handleStorageChange, 1000);

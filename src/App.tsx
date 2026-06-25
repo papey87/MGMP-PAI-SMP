@@ -71,6 +71,24 @@ const INITIAL_NEWS: NewsItem[] = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>("beranda");
+  const [showAdminTab, setShowAdminTab] = useState<boolean>(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const hasSecret = params.get("admin") === "true" || 
+                        params.get("admin") === "1" || 
+                        params.get("access") === "admin" || 
+                        params.get("secret") === "admin" || 
+                        params.get("kode") === "admin" ||
+                        params.get("key") === "admin";
+      if (hasSecret) {
+        localStorage.setItem("admin_portal_access", "true");
+        return true;
+      }
+    } catch (e) {
+      console.warn("localStorage check failed", e);
+    }
+    return localStorage.getItem("admin_portal_access") === "true";
+  });
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [newsList, setNewsList] = useState<NewsItem[]>(INITIAL_NEWS);
@@ -124,7 +142,7 @@ export default function App() {
     { id: "perangkat", label: "Perangkat Ajar", icon: BookOpen },
     { id: "artikel", label: "Artikel", icon: FileText },
     { id: "ai-sobat", label: "Tanya AI Sobat Guru", icon: Sparkles },
-    { id: "admin", label: "Portal Admin", icon: Lock }
+    ...(showAdminTab ? [{ id: "admin", label: "Portal Admin", icon: Lock }] : [])
   ];
 
   return (
@@ -344,7 +362,15 @@ export default function App() {
                 }}
               />
             )}
-            {activeTab === "admin" && <AdminTab />}
+            {activeTab === "admin" && (
+              <AdminTab 
+                onLogout={() => {
+                  setShowAdminTab(false);
+                  setActiveTab("beranda");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }} 
+              />
+            )}
           </div>
         )}
       </main>

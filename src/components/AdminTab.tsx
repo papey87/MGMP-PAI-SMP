@@ -108,9 +108,13 @@ const INITIAL_NEWS: Omit<NewsItem, "id">[] = [
   }
 ];
 
-export default function AdminTab() {
+interface AdminTabProps {
+  onLogout?: () => void;
+}
+
+export default function AdminTab({ onLogout }: AdminTabProps = {}) {
   const [user, setUser] = useState<User | null>(null);
-  const [isSimulated, setIsSimulated] = useState(() => localStorage.getItem("admin_is_simulated") === "true");
+  const [isSimulated, setIsSimulated] = useState(false);
   const [simulatedEmail, setSimulatedEmail] = useState("");
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState("");
@@ -448,11 +452,15 @@ export default function AdminTab() {
         await signOut(auth);
       }
       localStorage.removeItem("admin_is_simulated");
+      localStorage.removeItem("admin_portal_access");
       setUser(null);
       setSuccessMsg("Anda telah sukses keluar dari sesi administrator.");
       window.dispatchEvent(new Event("storage"));
+      if (onLogout) {
+        onLogout();
+      }
     } catch (e) {
-      console.error("Sing out error", e);
+      console.error("Sign out error", e);
     }
   };
 
@@ -774,13 +782,6 @@ export default function AdminTab() {
                 className="w-5 h-5"
               />
               Masuk dengan Akun Google
-            </button>
-
-            <button
-              onClick={handleSimulatedSignIn}
-              className="w-full bg-emerald-800 hover:bg-emerald-700 text-emerald-200 text-xs font-bold py-2 px-4 rounded-xl border border-emerald-700/60 transition-all cursor-pointer"
-            >
-              Mode Simulasi (Developer Bypass)
             </button>
           </div>
 
