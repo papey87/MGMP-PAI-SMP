@@ -68,6 +68,15 @@ export const SEED_ARTICLES: ArticleItem[] = [
     judul: "Pentingnya Sinergi Guru PAI dan Orang Tua dalam Mengawal Ibadah Siswa di Rumah",
     isi: "Pendidikan Agama Islam tidak boleh berhenti di gerbang sekolah. Apa yang dipelajari siswa tentang shalat, kejujuran, dan kesantunan harus teraplikasikan di rumah.\n\nOleh karena itu, kami di SMP Negeri 2 Jalancagak merancang 'Jurnal Kemitraan Ibadah digital' sederhana. Melalui jurnal ini, orang tua dapat mengonfirmasi aktivitas ibadah harian anak, sementara guru memberikan apresiasi serta bimbingan berkala.\n\nSinergi yang erat antara sekolah dan rumah adalah kunci utama kesuksesan pembentukan karakter anak didik kita.",
     createdAt: new Date(Date.now() - 86400000 * 2)
+  },
+  {
+    id: "seed-4",
+    nama: "Siti Nurjanah, S.Pd.I.",
+    asalSekolah: "SMP Negeri 3 Pagaden",
+    tanggalPenulisan: "2026-06-10",
+    judul: "Penerapan Metode Cooperative Learning Tipe Jigsaw untuk Mengatasi Kejenuhan Belajar Fiqih",
+    isi: "Materi Fiqih tentang thaharah dan pengurusan jenazah seringkali dinilai rumit jika hanya dipelajari secara teoritis.\n\nDengan membagi siswa ke dalam beberapa kelompok ahli melalui metode Cooperative Learning tipe Jigsaw, setiap anggota kelompok bertanggung jawab penuh untuk menguasai satu sub-bab bahasan (seperti memandikan, mengkafani, menyalatkan, atau menguburkan) lalu mengajarkannya kembali kepada kelompok asal. Siswa menjadi sangat aktif terlibat, saling berdiskusi penuh tanggung jawab, dan pencapaian kompetensi praktis meningkat pesat.\n\nMetode ini sangat ramah kelas dan melatih kepekaan sosial gotong royong sesuai Profil Pelajar Pancasila.",
+    createdAt: new Date(Date.now() - 86400000 * 3)
   }
 ];
 
@@ -213,9 +222,9 @@ export default function ArtikelTab({
   );
 
   return (
-    <div id="articles-section" className="space-y-8 animate-fade-in">
+    <div id="articles-section" className="space-y-5 animate-fade-in">
       {/* 1. Header Banner */}
-      <section id="articles-hero" className="relative overflow-hidden rounded-3xl bg-[#0e744c] text-white shadow-xl border border-emerald-800 p-8 md:p-12">
+      <section id="articles-hero" className="relative overflow-hidden rounded-3xl bg-[#0e744c] text-white shadow-xl border border-emerald-800 p-6 md:p-8">
         <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500 rounded-full opacity-10 blur-3xl -mr-20 -mt-20"></div>
         <div className="absolute bottom-0 left-0 w-80 h-80 bg-amber-500 rounded-full opacity-10 blur-3xl -ml-20 -mb-20"></div>
         
@@ -283,7 +292,7 @@ export default function ArtikelTab({
         </article>
       ) : (
         /* Grid Layout: Left Feed, Right Form */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           
           {/* Feed Column */}
           <div className={`${isFormOpen ? "lg:col-span-7" : "lg:col-span-12"} space-y-6`}>
@@ -337,7 +346,7 @@ export default function ArtikelTab({
                   <div 
                     key={article.id || Math.random().toString()}
                     onClick={() => setSelectedArticle(article)}
-                    className="group bg-white p-6 rounded-2xl border border-slate-150/50 shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-300 cursor-pointer flex flex-col justify-between gap-4"
+                    className="group bg-white p-4.5 rounded-2xl border border-slate-150/50 shadow-sm hover:shadow-md hover:border-emerald-100 transition-all duration-300 cursor-pointer flex flex-col justify-between gap-3"
                   >
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
@@ -384,7 +393,7 @@ export default function ArtikelTab({
           {/* Form Column */}
           {isFormOpen && (
             <div id="write-article-form-container" className="lg:col-span-5">
-              <div className="bg-white rounded-3xl border border-slate-150/50 p-6 md:p-8 shadow-sm space-y-6 sticky top-28 animate-fade-in">
+              <div className="bg-white rounded-3xl border border-slate-150/50 p-4 md:p-5 shadow-sm space-y-4 sticky top-28 animate-fade-in">
                 <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-4">
                   <div className="space-y-1.5">
                     <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">

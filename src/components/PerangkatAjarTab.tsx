@@ -497,7 +497,7 @@ export default function PerangkatAjarTab() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {/* Tab intro heading */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -521,7 +521,7 @@ export default function PerangkatAjarTab() {
       </div>
 
       {/* Subdivision Segments Selection */}
-      <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 border border-slate-200/50 rounded-2xl">
+      <div className="flex flex-col sm:flex-row gap-3 p-3 bg-slate-50 border border-slate-200/50 rounded-2xl">
         <div className="flex flex-wrap gap-1.5 overflow-x-auto shrink-0 pb-1 sm:pb-0">
           <button
             onClick={() => {
@@ -568,10 +568,10 @@ export default function PerangkatAjarTab() {
       </div>
 
       {activeSubdivision === "artikel" ? (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-4 animate-fade-in">
           {isArticleWritingMode ? (
             /* Document Editor Tab Canvas */
-            <div className="space-y-6 bg-white p-6 md:p-10 rounded-3xl border border-slate-200/60 shadow-sm animate-fade-in">
+            <div className="space-y-4 bg-white p-5 md:p-6 rounded-3xl border border-slate-200/60 shadow-sm animate-fade-in">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg md:text-xl font-extrabold text-slate-800">Tulis Ringkasan Materi & Artikel Baru</h2>
@@ -759,10 +759,10 @@ export default function PerangkatAjarTab() {
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
                 {articles.length > 0 ? (
                   articles.map((art) => (
-                    <div key={art.id} className="bg-white rounded-2xl border border-slate-100 p-6 flex flex-col justify-between shadow-sm hover:shadow active:border-emerald-100 transition-all">
+                    <div key={art.id} className="bg-white rounded-2xl border border-slate-100 p-4.5 flex flex-col justify-between shadow-sm hover:shadow active:border-emerald-100 transition-all">
                       <div className="space-y-3">
                         <div className="flex items-center justify-between text-[10px] text-slate-400">
                           <span className="bg-amber-50 text-amber-700 font-extrabold px-2 py-0.5 rounded">
@@ -804,7 +804,7 @@ export default function PerangkatAjarTab() {
       ) : (
         <>
           {/* Control Actions / Search Bar Filter Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 p-5 rounded-2xl bg-slate-50 border border-slate-200/50">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 p-4 rounded-2xl bg-slate-50 border border-slate-200/50">
             {/* Search */}
         <div className="lg:col-span-2 relative">
           <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-400" />
@@ -868,12 +868,12 @@ export default function PerangkatAjarTab() {
       </div>
 
       {/* Grid Library Items container */}
-      <div id="resources-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div id="resources-grid" className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredResources.length > 0 ? (
           filteredResources.map((res) => (
             <div 
               key={res.id}
-              className="group bg-white rounded-2xl border border-slate-100 p-6 shadow-sm hover:border-emerald-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
+              className="group bg-white rounded-2xl border border-slate-100 p-4.5 shadow-sm hover:border-emerald-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between"
             >
               <div className="space-y-4">
                 {/* Upper tags & size metadata info */}

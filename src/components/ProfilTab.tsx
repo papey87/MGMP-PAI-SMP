@@ -282,9 +282,9 @@ export default function ProfilTab() {
   };
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-6">
       {/* Upper banner section */}
-      <section id="profil-intro" className="text-center max-w-2xl mx-auto space-y-4">
+      <section id="profil-intro" className="text-center max-w-2xl mx-auto space-y-2.5">
         <h1 className="text-2xl md:text-4xl font-extrabold text-slate-800 tracking-tight">
           Profil MGMP PAI SMP
         </h1>
@@ -327,14 +327,14 @@ export default function ProfilTab() {
 
       {/* Visimisi Tab Panel Content */}
       {activeTab === "visimisi" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           
           {/* Card: Visi */}
-          <div className="p-8 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center space-y-4 hover:border-emerald-100 transition-all relative">
-            <div className="p-4 rounded-xl bg-emerald-50 text-emerald-700">
-              <Target className="w-8 h-8" />
+          <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center space-y-3 hover:border-emerald-100 transition-all relative">
+            <div className="p-3 rounded-xl bg-emerald-50 text-emerald-700">
+              <Target className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-800">Visi Kami</h3>
+            <h3 className="text-base font-bold text-slate-800">Visi Kami</h3>
             <p className="text-xs text-slate-500 leading-relaxed italic">
               "{profileVisi}"
             </p>
@@ -353,15 +353,15 @@ export default function ProfilTab() {
           </div>
 
           {/* Card: Misi */}
-          <div className="md:col-span-2 p-8 rounded-2xl bg-gradient-to-br from-white to-emerald-50/20 border border-slate-100 shadow-sm space-y-6 relative">
+          <div className="md:col-span-2 p-5 rounded-2xl bg-gradient-to-br from-white to-emerald-50/20 border border-slate-100 shadow-sm space-y-4 relative">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-amber-50 text-amber-600">
-                  <Shield className="w-6 h-6" />
+                <div className="p-2.5 rounded-xl bg-amber-50 text-amber-600">
+                  <Shield className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800">Misi MGMP PAI</h3>
-                  <p className="text-xs text-slate-400 font-semibold">Implementasi program keprofesian berkelanjutan</p>
+                  <h3 className="text-base font-bold text-slate-800">Misi MGMP PAI</h3>
+                  <p className="text-[11px] text-slate-400 font-semibold">Implementasi program keprofesian berkelanjutan</p>
                 </div>
               </div>
               {isAdmin && (
@@ -414,11 +414,11 @@ export default function ProfilTab() {
           </div>
 
           {/* Section: Tujuan Organisasi (Middle Full Row) */}
-          <div className="md:col-span-3 p-8 rounded-3xl bg-slate-50 border border-slate-200/40 space-y-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200/50 pb-4">
+          <div className="md:col-span-3 p-5 rounded-3xl bg-slate-50 border border-slate-200/40 space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/50 pb-3">
               <div className="space-y-1">
-                <span className="text-xs text-amber-600 font-bold uppercase tracking-widest">Tujuan MGMP</span>
-                <h3 className="text-xl font-bold text-slate-800">Dasar Pijak Kerja Kami</h3>
+                <span className="text-[11px] text-amber-600 font-bold uppercase tracking-widest">Tujuan MGMP</span>
+                <h3 className="text-lg font-bold text-slate-800">Dasar Pijak Kerja Kami</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
                   Tujuan strategis didirikannya MGMP PAI meliputi pengayaan materi ajaran lurus untuk mencegah paham ekstremisme.
                 </p>
@@ -480,10 +480,10 @@ export default function ProfilTab() {
 
       {/* Struktur Tab Panel Content */}
       {activeTab === "struktur" && (
-        <div className="space-y-6 animate-fade-in">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b pb-4">
+        <div className="space-y-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 border-b pb-3">
             <div className="space-y-1 text-center sm:text-left">
-              <h3 className="text-xl font-bold text-slate-800">Dewan Pengurus Harian MGMP</h3>
+              <h3 className="text-lg font-bold text-slate-800">Dewan Pengurus Harian MGMP</h3>
               <p className="text-xs text-slate-500">Masa Bakti Anggota Pengurus Periode 2024 - 2027</p>
             </div>
             {isAdmin && (
@@ -506,45 +506,45 @@ export default function ProfilTab() {
             )}
           </div>
 
-          <div id="committee-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
+          <div id="committee-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-1">
             {structureList.map((item, index) => (
               <div 
                 key={index}
                 className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:border-emerald-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group"
               >
-                <div className="p-6 flex gap-4 items-start">
+                <div className="p-4 flex gap-3.5 items-start">
                   <div className="relative shrink-0">
                     {item.avatar ? (
                       <img 
                         src={item.avatar} 
                         alt={item.name} 
-                        className="w-16 h-16 rounded-2xl object-cover ring-2 ring-emerald-100"
+                        className="w-14 h-14 rounded-2xl object-cover ring-2 ring-emerald-100"
                         referrerPolicy="no-referrer"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center ring-2 ring-emerald-100">
-                        <LucideUser className="w-8 h-8" />
+                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center ring-2 ring-emerald-100">
+                        <LucideUser className="w-7 h-7" />
                       </div>
                     )}
                     <span className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-emerald-600 text-white shadow" title="Pengurus Terverifikasi">
-                      <BadgeCheck className="w-4 h-4" />
+                      <BadgeCheck className="w-3.5 h-3.5" />
                     </span>
                   </div>
                   <div className="space-y-1 pr-4">
                     <span className="text-[9px] bg-amber-50 text-amber-700 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
                       {item.role}
                     </span>
-                    <h4 className="font-bold text-slate-800 text-sm leading-tight pt-1">
+                    <h4 className="font-bold text-slate-800 text-xs sm:text-sm leading-tight pt-1">
                       {item.name}
                     </h4>
-                    <p className="text-xs text-slate-500 inline-flex items-center gap-1 font-semibold">
-                      <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                    <p className="text-[11px] text-slate-500 inline-flex items-center gap-1 font-semibold">
+                      <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
                       {item.school}
                     </p>
                   </div>
                 </div>
 
-                <div className="px-6 py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+                <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
                   <span className="font-medium">
                     Keahlian: <strong className="text-emerald-700 font-bold">{item.specialty}</strong>
                   </span>

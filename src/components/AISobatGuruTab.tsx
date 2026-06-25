@@ -498,9 +498,9 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
 
   if (!verifiedTeacher) {
     return (
-      <div className="max-w-2xl mx-auto py-10 px-4 animate-fade-in-up">
+      <div className="max-w-xl mx-auto py-6 px-4 animate-fade-in-up">
         {/* Verification Card */}
-        <div className="bg-white border border-slate-200 p-8 rounded-3xl shadow-lg relative overflow-hidden space-y-6">
+        <div className="bg-white border border-slate-200 p-5 rounded-3xl shadow-lg relative overflow-hidden space-y-4">
           <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-emerald-800 to-teal-700" />
           
           <div className="text-center space-y-3">
@@ -608,9 +608,9 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Logged in Teacher Info Banner */}
-      <div className="bg-emerald-50 border border-emerald-150 p-4 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-fade-in shadow-xs">
+      <div className="bg-emerald-50 border border-emerald-150 p-3 rounded-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 animate-fade-in shadow-xs">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-sm shrink-0">
             <CheckSquare className="w-5 h-5" />
@@ -652,12 +652,12 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
       </div>
 
       {/* Suggested chips list */}
-      <section id="prompt-shortcuts" className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <section id="prompt-shortcuts" className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {SUGGESTED_PROMPTS.map((prompt, i) => (
           <div 
             key={i}
             onClick={() => handleSendMessage(prompt.prompt)}
-            className="group cursor-pointer p-4 rounded-xl border border-slate-100 bg-white hover:border-emerald-100 hover:bg-emerald-50/10 hover:shadow-sm transition-all duration-200 flex flex-col justify-between space-y-3"
+            className="group cursor-pointer p-3 rounded-xl border border-slate-100 bg-white hover:border-emerald-100 hover:bg-emerald-50/10 hover:shadow-sm transition-all duration-200 flex flex-col justify-between space-y-3"
           >
             <div className="p-2 w-max rounded-lg bg-emerald-50 text-emerald-700 group-hover:bg-emerald-100 transition-colors">
               <prompt.icon className="w-4 h-4" />
@@ -675,10 +675,10 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
       </section>
 
       {/* Main chat conversation container */}
-      <section id="chat-frame" className="rounded-3xl border border-slate-150 bg-slate-50 overflow-hidden flex flex-col h-[520px]">
+      <section id="chat-frame" className="rounded-3xl border border-slate-150 bg-slate-50 overflow-hidden flex flex-col h-[460px]">
         
         {/* Top bar */}
-        <div className="bg-white border-b border-slate-150 px-6 py-4 flex items-center justify-between shadow-sm select-none">
+        <div className="bg-white border-b border-slate-150 px-4 py-3 flex items-center justify-between shadow-sm select-none">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-800 to-teal-700 text-white flex items-center justify-center font-bold">
               <Bot className="w-5.5 h-5.5" />
@@ -697,7 +697,7 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
         </div>
 
         {/* Scrollable conversation section */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
           {messages.map((msg) => (
             <div 
               key={msg.id}
@@ -715,7 +715,7 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
               </div>
 
               {/* Message bubble content with action menu */}
-              <div className={`relative group/bubble p-5 rounded-2xl border ${
+              <div className={`relative group/bubble p-4 rounded-2xl border ${
                 msg.role === "user" 
                   ? "bg-emerald-800 text-emerald-50 border-emerald-700 rounded-tr-none" 
                   : "bg-white text-slate-700 border-slate-200/60 rounded-tl-none shadow-[0_2px_10px_-4px_rgba(0,0,0,0.03)]"

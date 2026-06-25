@@ -63,7 +63,14 @@ import {
   User as LucideUser,
   Upload,
   Smartphone,
-  Check
+  Check,
+  Sliders,
+  Eye,
+  EyeOff,
+  MoveUp,
+  MoveDown,
+  PencilLine,
+  LayoutGrid
 } from "lucide-react";
 
 // For error logging wrapper
@@ -130,7 +137,47 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
   const [aiLogs, setAiLogs] = useState<any[]>([]);
   
   // Navigation inside Admin Panel
-  const [adminSubTab, setAdminSubTab] = useState<"dashboard" | "berita" | "guru" | "api_monitoring" | "profil_mgmp" | "kelola_apk" | "integrasi_firebase" | "kelola_pemberitahuan">("dashboard");
+  const [adminSubTab, setAdminSubTab] = useState<"dashboard" | "berita" | "guru" | "api_monitoring" | "profil_mgmp" | "kelola_apk" | "integrasi_firebase" | "kelola_pemberitahuan" | "kelola_tata_letak">("dashboard");
+
+  // Layout & Sections management state
+  const [layoutTabs, setLayoutTabs] = useState([
+    { id: "beranda", label: "Beranda", visible: true },
+    { id: "profil", label: "Profil MGMP", visible: true },
+    { id: "informasi", label: "Informasi", visible: true },
+    { id: "kegiatan", label: "Agenda Kegiatan", visible: true },
+    { id: "perangkat", label: "Perangkat Ajar", visible: true },
+    { id: "artikel", label: "Artikel", visible: true },
+    { id: "ai-sobat", label: "Tanya AI Sobat Guru", visible: true }
+  ]);
+
+  const [layoutHomeSections, setLayoutHomeSections] = useState([
+    { id: "hero", label: "Hero Banner", visible: true, order: 1, title: "", subtitle: "", description: "", badgeText: "" },
+    { id: "siladik", label: "Sistem Informasi SILADIK", visible: true, order: 2, title: "" },
+    { id: "advice", label: "Kolom Berbagi Nasihat / Tulisan Guru", visible: true, order: 3, title: "", description: "" },
+    { id: "news_quote", label: "Berita, Pengumuman & Ruang Inspirasi", visible: true, order: 4, title: "", description: "", quoteTitle: "", quoteDescription: "" }
+  ]);
+
+  const [layoutCustomSections, setLayoutCustomSections] = useState<any[]>([]);
+
+  // Editing forms state
+  const [editingSectionId, setEditingSectionId] = useState<string | null>(null);
+  const [editingSectionForm, setEditingSectionForm] = useState({
+    title: "",
+    subtitle: "",
+    description: "",
+    badgeText: "",
+    quoteTitle: "",
+    quoteDescription: ""
+  });
+
+  const [isCustomSectionModalOpen, setIsCustomSectionModalOpen] = useState(false);
+  const [editingCustomIndex, setEditingCustomIndex] = useState<number | null>(null);
+  const [customSectionForm, setCustomSectionForm] = useState({
+    title: "",
+    content: "",
+    imageUrl: "",
+    visible: true
+  });
 
   // Search/Filter Search Input States
   const [searchTeacherQuery, setSearchTeacherQuery] = useState("");
@@ -571,6 +618,16 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
       }
     });
 
+    // 7. Subscribe to Layout configurations doc
+    const unsubLayout = onSnapshot(doc(db, "settings", "layout"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.tabs) setLayoutTabs(data.tabs);
+        if (data.homeSections) setLayoutHomeSections(data.homeSections);
+        if (data.customSections) setLayoutCustomSections(data.customSections);
+      }
+    });
+
     return () => {
       unsubTeachers();
       unsubNews();
@@ -578,6 +635,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
       unsubProfile();
       unsubApk();
       unsubAnnouncement();
+      unsubLayout();
     };
   }, [user, isSimulated]);
 
@@ -883,6 +941,224 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
     }
   };
 
+  // Tata Letak Management Handlers
+  const handleToggleTabVisibility = async (tabId: string) => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const updatedTabs = layoutTabs.map((t) =>
+        t.id === tabId ? { ...t, visible: !t.visible } : t
+      );
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: updatedTabs,
+        homeSections: layoutHomeSections,
+        customSections: layoutCustomSections
+      }, { merge: true });
+      setSuccessMsg("Visibilitas tab navigasi berhasil diperbarui!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal memperbarui visibilitas tab navigasi.");
+    }
+  };
+
+  const handleUpdateTabLabel = async (tabId: string, newLabel: string) => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    if (!newLabel.trim()) return;
+    try {
+      const updatedTabs = layoutTabs.map((t) =>
+        t.id === tabId ? { ...t, label: newLabel } : t
+      );
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: updatedTabs,
+        homeSections: layoutHomeSections,
+        customSections: layoutCustomSections
+      }, { merge: true });
+      setSuccessMsg("Nama tab navigasi berhasil diperbarui!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal memperbarui nama tab navigasi.");
+    }
+  };
+
+  const handleToggleSectionVisibility = async (sectId: string) => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const updatedSections = layoutHomeSections.map((s) =>
+        s.id === sectId ? { ...s, visible: !s.visible } : s
+      );
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: layoutTabs,
+        homeSections: updatedSections,
+        customSections: layoutCustomSections
+      }, { merge: true });
+      setSuccessMsg("Visibilitas bagian beranda berhasil diperbarui!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal memperbarui visibilitas bagian beranda.");
+    }
+  };
+
+  const handleMoveSection = async (index: number, direction: "up" | "down") => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    const newIndex = direction === "up" ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= layoutHomeSections.length) return;
+
+    try {
+      const sectionsCopy = [...layoutHomeSections];
+      // Swap order attributes
+      const tempOrder = sectionsCopy[index].order;
+      sectionsCopy[index].order = sectionsCopy[newIndex].order;
+      sectionsCopy[newIndex].order = tempOrder;
+
+      // Swap in list
+      const tempObj = sectionsCopy[index];
+      sectionsCopy[index] = sectionsCopy[newIndex];
+      sectionsCopy[newIndex] = tempObj;
+
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: layoutTabs,
+        homeSections: sectionsCopy,
+        customSections: layoutCustomSections
+      }, { merge: true });
+      setSuccessMsg("Urutan tata letak bagian berhasil dipindahkan!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal memindahkan urutan tata letak.");
+    }
+  };
+
+  const handleStartEditSection = (sect: any) => {
+    setEditingSectionId(sect.id);
+    setEditingSectionForm({
+      title: sect.title || "",
+      subtitle: sect.subtitle || "",
+      description: sect.description || "",
+      badgeText: sect.badgeText || "",
+      quoteTitle: sect.quoteTitle || "",
+      quoteDescription: sect.quoteDescription || ""
+    });
+  };
+
+  const handleSaveSectionEdits = async () => {
+    if (!editingSectionId) return;
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const updatedSections = layoutHomeSections.map((s) => {
+        if (s.id === editingSectionId) {
+          return {
+            ...s,
+            title: editingSectionForm.title,
+            subtitle: editingSectionForm.subtitle,
+            description: editingSectionForm.description,
+            badgeText: editingSectionForm.badgeText,
+            quoteTitle: editingSectionForm.quoteTitle,
+            quoteDescription: editingSectionForm.quoteDescription
+          };
+        }
+        return s;
+      });
+
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: layoutTabs,
+        homeSections: updatedSections,
+        customSections: layoutCustomSections
+      }, { merge: true });
+
+      setEditingSectionId(null);
+      setSuccessMsg("Konten elemen beranda berhasil disimpan!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal menyimpan konten elemen beranda.");
+    }
+  };
+
+  const handleSaveCustomSection = async () => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    if (!customSectionForm.title.trim()) {
+      setErrorMsg("Judul bagian kustom tidak boleh kosong!");
+      return;
+    }
+    try {
+      let updatedCustoms = [...layoutCustomSections];
+      if (editingCustomIndex !== null) {
+        // Edit existing
+        updatedCustoms[editingCustomIndex] = {
+          ...updatedCustoms[editingCustomIndex],
+          title: customSectionForm.title,
+          content: customSectionForm.content,
+          imageUrl: customSectionForm.imageUrl,
+          visible: customSectionForm.visible
+        };
+      } else {
+        // Create new
+        updatedCustoms.push({
+          id: "custom_" + Date.now(),
+          title: customSectionForm.title,
+          content: customSectionForm.content,
+          imageUrl: customSectionForm.imageUrl,
+          visible: customSectionForm.visible,
+          createdAt: new Date().toISOString()
+        });
+      }
+
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: layoutTabs,
+        homeSections: layoutHomeSections,
+        customSections: updatedCustoms
+      }, { merge: true });
+
+      setIsCustomSectionModalOpen(false);
+      setEditingCustomIndex(null);
+      setCustomSectionForm({ title: "", content: "", imageUrl: "", visible: true });
+      setSuccessMsg("Bagian kustom berhasil disimpan!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal menyimpan bagian kustom.");
+    }
+  };
+
+  const handleToggleCustomVisibility = async (index: number) => {
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const updatedCustoms = layoutCustomSections.map((c, i) =>
+        i === index ? { ...c, visible: !c.visible } : c
+      );
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: layoutTabs,
+        homeSections: layoutHomeSections,
+        customSections: updatedCustoms
+      }, { merge: true });
+      setSuccessMsg("Visibilitas bagian kustom diperbarui!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal memperbarui visibilitas bagian kustom.");
+    }
+  };
+
+  const handleDeleteCustomSection = async (index: number) => {
+    if (!window.confirm("Hapus bagian kustom ini secara permanen?")) return;
+    setErrorMsg("");
+    setSuccessMsg("");
+    try {
+      const updatedCustoms = layoutCustomSections.filter((_, i) => i !== index);
+      await setDoc(doc(db, "settings", "layout"), {
+        tabs: layoutTabs,
+        homeSections: layoutHomeSections,
+        customSections: updatedCustoms
+      }, { merge: true });
+      setSuccessMsg("Bagian kustom berhasil dihapus!");
+    } catch (err) {
+      console.error(err);
+      setErrorMsg("Gagal menghapus bagian kustom.");
+    }
+  };
+
   // Filtered lists logic
   const filteredTeachers = teachers.filter((t) => {
     const matchesSearch = t.nama.toLowerCase().includes(searchTeacherQuery.toLowerCase()) || 
@@ -1176,6 +1452,18 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
           >
             <Megaphone className="w-4 h-4 text-rose-500" />
             f. Kelola Pemberitahuan PENTING
+          </button>
+
+          <button
+            onClick={() => setAdminSubTab("kelola_tata_letak")}
+            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
+              adminSubTab === "kelola_tata_letak"
+                ? "bg-emerald-800 text-white shadow-md font-black"
+                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
+            }`}
+          >
+            <Sliders className="w-4 h-4 text-indigo-500" />
+            g. Kelola Tata Letak & Elemen
           </button>
 
           <button
@@ -2727,6 +3015,461 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
             </div>
 
           </div>
+        </div>
+      )}
+
+      {/* SUB TAB 7: KELOLA TATA LETAK & ELEMEN */}
+      {adminSubTab === "kelola_tata_letak" && (
+        <div className="space-y-6 animate-fade-in-up text-slate-800 text-xs sm:text-sm">
+          
+          {/* Card 1: Navigation Tabs Configuration */}
+          <div className="bg-white border border-slate-150 p-6 rounded-3xl shadow-sm space-y-4">
+            <div className="border-b border-slate-100 pb-4">
+              <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                <LayoutGrid className="w-5 h-5 text-indigo-500" />
+                a. Kelola Visibilitas & Nama Tab Navigasi Utama
+              </h3>
+              <p className="text-xs text-slate-400 font-medium">Aktifkan atau nonaktifkan tab menu navigasi utama situs web secara instan serta ubah nama menu sesuai kebutuhan.</p>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-150 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                    <th className="py-3 px-3">ID Menu</th>
+                    <th className="py-3 px-3">Nama Menu Default</th>
+                    <th className="py-3 px-3">Nama Menu Kustom (Bisa Diedit)</th>
+                    <th className="py-3 px-3">Status Visibilitas</th>
+                    <th className="py-3 px-3 text-right">Opsi Tindakan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-semibold text-slate-700">
+                  {layoutTabs.map((tab) => (
+                    <tr key={tab.id} className="hover:bg-slate-50/50 transition-all">
+                      <td className="py-3 px-3 font-mono text-[10px] text-slate-400">{tab.id}</td>
+                      <td className="py-3 px-3 text-slate-500">{tab.id === "ai-sobat" ? "Tanya AI Sobat Guru" : tab.id.toUpperCase()}</td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="text"
+                          defaultValue={tab.label}
+                          id={`tab-label-${tab.id}`}
+                          placeholder={tab.label}
+                          className="px-3 py-1.5 border border-slate-200 rounded-xl bg-slate-50 focus:bg-white text-xs font-bold text-slate-800 w-full max-w-[200px]"
+                        />
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black ${
+                          tab.visible !== false ? "bg-emerald-50 text-emerald-700" : "bg-red-50 text-red-600"
+                        }`}>
+                          <span className={`w-1.5 h-1.5 rounded-full ${tab.visible !== false ? "bg-emerald-600" : "bg-red-500"}`}></span>
+                          {tab.visible !== false ? "Aktif & Tampil" : "Disembunyikan"}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-right space-x-2">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const val = (document.getElementById(`tab-label-${tab.id}`) as HTMLInputElement)?.value;
+                            if (val) handleUpdateTabLabel(tab.id, val);
+                          }}
+                          className="bg-slate-100 hover:bg-slate-200 border text-slate-700 hover:text-slate-800 text-[10px] font-black px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                        >
+                          Simpan Nama
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleTabVisibility(tab.id)}
+                          className={`text-[10px] font-black px-3 py-1.5 rounded-xl border transition-all cursor-pointer ${
+                            tab.visible !== false
+                              ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100/50"
+                              : "bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100/50"
+                          }`}
+                        >
+                          {tab.visible !== false ? "Sembunyikan" : "Tampilkan"}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Card 2: Home Sections Layout Configuration */}
+          <div className="bg-white border border-slate-150 p-6 rounded-3xl shadow-sm space-y-6">
+            <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                  <Sliders className="w-5 h-5 text-indigo-500" />
+                  b. Atur Tata Letak & Urutan Elemen Halaman Beranda
+                </h3>
+                <p className="text-xs text-slate-400 font-medium">Ubah urutan, ubah visibilitas, atau edit seluruh konten statis yang ada di Halaman Beranda MGMP PAI SMP.</p>
+              </div>
+            </div>
+
+            {/* List of sections with drag-like controls */}
+            <div className="space-y-4">
+              {layoutHomeSections.map((sect, index) => {
+                const isEditing = editingSectionId === sect.id;
+
+                return (
+                  <div key={sect.id} className="border border-slate-150 rounded-2xl p-4 bg-slate-50/50 hover:bg-slate-50 transition-all space-y-4">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-black text-slate-400 bg-white border border-slate-200 w-7 h-7 rounded-lg flex items-center justify-center shadow-sm select-none">
+                          {index + 1}
+                        </span>
+                        <div>
+                          <h4 className="font-extrabold text-slate-800 text-sm">{sect.label}</h4>
+                          <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">ID Elemen: {sect.id}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                        {/* Order adjustment buttons */}
+                        <div className="flex bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+                          <button
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => handleMoveSection(index, "up")}
+                            className="p-2 hover:bg-slate-50 text-slate-500 disabled:opacity-20 cursor-pointer"
+                            title="Naikkan Urutan"
+                          >
+                            <MoveUp className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            disabled={index === layoutHomeSections.length - 1}
+                            onClick={() => handleMoveSection(index, "down")}
+                            className="p-2 hover:bg-slate-50 text-slate-500 disabled:opacity-20 cursor-pointer"
+                            title="Turunkan Urutan"
+                          >
+                            <MoveDown className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+
+                        {/* Visibility and edit toggles */}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSectionVisibility(sect.id)}
+                          className={`p-2 rounded-xl border flex items-center justify-center cursor-pointer shadow-sm ${
+                            sect.visible !== false
+                              ? "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100"
+                              : "bg-slate-200 text-slate-400 border-slate-300 hover:bg-slate-250"
+                          }`}
+                          title={sect.visible !== false ? "Sembunyikan Bagian" : "Tampilkan Bagian"}
+                        >
+                          {sect.visible !== false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (isEditing) {
+                              setEditingSectionId(null);
+                            } else {
+                              handleStartEditSection(sect);
+                            }
+                          }}
+                          className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold cursor-pointer flex items-center gap-1 shadow-sm"
+                        >
+                          <PencilLine className="w-3.5 h-3.5" />
+                          {isEditing ? "Tutup Editor" : "Edit Konten"}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Inline Content Editor Form */}
+                    {isEditing && (
+                      <div className="bg-white rounded-2xl p-4 border border-slate-150 space-y-4 animate-fade-in text-left">
+                        <div className="border-b border-slate-100 pb-2">
+                          <h5 className="font-bold text-slate-700 text-xs uppercase tracking-wider">✏️ Editor Konten {sect.label}</h5>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Title (All except possibly advice if not custom, but let's provide to all) */}
+                          {sect.id !== "siladik" && (
+                            <div className="space-y-1.5 md:col-span-2">
+                              <label className="font-bold text-slate-600 block text-xs">Judul Elemen</label>
+                              <input
+                                type="text"
+                                value={editingSectionForm.title}
+                                onChange={(e) => setEditingSectionForm({ ...editingSectionForm, title: e.target.value })}
+                                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-600 text-xs font-bold text-slate-800"
+                                placeholder={`Judul default: ${sect.label}`}
+                              />
+                            </div>
+                          )}
+
+                          {sect.id === "hero" && (
+                            <>
+                              <div className="space-y-1.5">
+                                <label className="font-bold text-slate-600 block text-xs">Sub-Judul (Subtitle)</label>
+                                <input
+                                  type="text"
+                                  value={editingSectionForm.subtitle}
+                                  onChange={(e) => setEditingSectionForm({ ...editingSectionForm, subtitle: e.target.value })}
+                                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-600 text-xs font-semibold"
+                                  placeholder="Sub-judul atau tagline heros..."
+                                />
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label className="font-bold text-slate-600 block text-xs">Teks Lencana (Badge Text)</label>
+                                <input
+                                  type="text"
+                                  value={editingSectionForm.badgeText}
+                                  onChange={(e) => setEditingSectionForm({ ...editingSectionForm, badgeText: e.target.value })}
+                                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-600 text-xs font-bold"
+                                  placeholder="e.g. PORTAL DIGITAL RESMI"
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {sect.id === "news_quote" && (
+                            <>
+                              <div className="space-y-1.5">
+                                <label className="font-bold text-slate-600 block text-xs">Judul Kolom Hikmah/Kutipan</label>
+                                <input
+                                  type="text"
+                                  value={editingSectionForm.quoteTitle}
+                                  onChange={(e) => setEditingSectionForm({ ...editingSectionForm, quoteTitle: e.target.value })}
+                                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-600 text-xs font-bold"
+                                  placeholder="e.g. RUANG INSPIRASI MGMP"
+                                />
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <label className="font-bold text-slate-600 block text-xs">Penjelasan Kolom Hikmah</label>
+                                <input
+                                  type="text"
+                                  value={editingSectionForm.quoteDescription}
+                                  onChange={(e) => setEditingSectionForm({ ...editingSectionForm, quoteDescription: e.target.value })}
+                                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-600 text-xs font-semibold"
+                                  placeholder="Deskripsi kecil di atas box kutipan..."
+                                />
+                              </div>
+                            </>
+                          )}
+
+                          {sect.id !== "siladik" && (
+                            <div className="space-y-1.5 md:col-span-2">
+                              <label className="font-bold text-slate-600 block text-xs">Deskripsi / Teks Penjelasan</label>
+                              <textarea
+                                value={editingSectionForm.description}
+                                onChange={(e) => setEditingSectionForm({ ...editingSectionForm, description: e.target.value })}
+                                rows={2}
+                                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-indigo-600 text-xs leading-relaxed"
+                                placeholder="Teks keterangan tambahan yang terpampang di bawah judul..."
+                              />
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                          <button
+                            type="button"
+                            onClick={() => setEditingSectionId(null)}
+                            className="px-3 py-1.5 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 text-xs font-bold"
+                          >
+                            Batal
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveSectionEdits}
+                            className="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-black shadow"
+                          >
+                            Terapkan & Simpan Konten
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Card 3: Custom Sections Configuration */}
+          <div className="bg-white border border-slate-150 p-6 rounded-3xl shadow-sm space-y-6">
+            <div className="border-b border-slate-100 pb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-emerald-600" />
+                  c. Kelola Bagian Halaman Kustom (Custom Sections)
+                </h3>
+                <p className="text-xs text-slate-400 font-medium">Buat bagian teks, panduan baru, pengumuman eksternal, atau media tambahan di halaman beranda secara bebas.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setEditingCustomIndex(null);
+                  setCustomSectionForm({ title: "", content: "", imageUrl: "", visible: true });
+                  setIsCustomSectionModalOpen(true);
+                }}
+                className="bg-emerald-800 hover:bg-emerald-700 duration-200 text-white font-extrabold text-xs px-4 py-2.5 rounded-xl cursor-pointer shadow flex items-center gap-1.5"
+              >
+                <Plus className="w-4 h-4" />
+                Buat Bagian Kustom Baru
+              </button>
+            </div>
+
+            {/* List of custom sections */}
+            {layoutCustomSections.length === 0 ? (
+              <div className="text-center py-8 text-slate-400 font-semibold italic text-xs bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+                Belum ada bagian halaman kustom yang dibuat. Tekan tombol di atas untuk menambahkannya!
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {layoutCustomSections.map((c, index) => (
+                  <div key={c.id || index} className="p-4 bg-white border border-slate-150 rounded-2xl flex flex-col justify-between shadow-sm hover:shadow-md transition-shadow relative group">
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                          c.visible !== false ? "bg-emerald-50 text-emerald-700" : "bg-red-550/10 text-red-650"
+                        }`}>
+                          {c.visible !== false ? "Tampil" : "Disembunyikan"}
+                        </span>
+                        
+                        <div className="flex gap-1">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleCustomVisibility(index)}
+                            className="p-1 text-slate-500 hover:bg-slate-50 border rounded-lg"
+                            title="Tutup/Buka Kunci Tampil"
+                          >
+                            {c.visible !== false ? <Eye className="w-3.5 h-3.5 text-emerald-600" /> : <EyeOff className="w-3.5 h-3.5 text-slate-400" />}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingCustomIndex(index);
+                              setCustomSectionForm({
+                                title: c.title || "",
+                                content: c.content || "",
+                                imageUrl: c.imageUrl || "",
+                                visible: c.visible !== false
+                              });
+                              setIsCustomSectionModalOpen(true);
+                            }}
+                            className="p-1 text-indigo-600 hover:bg-indigo-50 border border-slate-200 rounded-lg cursor-pointer"
+                            title="Edit Bagian"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteCustomSection(index)}
+                            className="p-1 text-red-600 hover:bg-red-50 border border-slate-200 rounded-lg cursor-pointer"
+                            title="Hapus Bagian"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <h4 className="text-xs font-black text-slate-800 line-clamp-1">{c.title}</h4>
+                      {c.imageUrl && (
+                        <div className="w-full h-24 rounded-lg bg-slate-100 overflow-hidden border">
+                          <img src={c.imageUrl} alt={c.title} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                        </div>
+                      )}
+                      <p className="text-[11px] text-slate-500 leading-relaxed line-clamp-3 whitespace-pre-wrap font-medium">{c.content}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Custom Section Modals */}
+          {isCustomSectionModalOpen && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div className="bg-white w-full max-w-lg rounded-3xl shadow-xl border border-slate-150 overflow-hidden flex flex-col max-h-[85vh]">
+                <div className="bg-emerald-900 text-white p-5 flex justify-between items-center shrink-0">
+                  <h3 className="font-extrabold text-xs sm:text-sm tracking-tight text-white flex items-center gap-2">
+                    <Plus className="w-5 h-5 text-emerald-300" />
+                    {editingCustomIndex !== null ? "Edit Bagian Kustom" : "Buat Bagian Kustom Baru"}
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomSectionModalOpen(false)}
+                    className="text-white/80 hover:text-white p-1 rounded-full cursor-pointer hover:bg-white/10"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="p-5 space-y-4 overflow-y-auto flex-grow text-left text-xs sm:text-sm">
+                  <div className="space-y-1.5">
+                    <label className="font-extrabold text-slate-700 block">Judul Bagian Halaman *</label>
+                    <input
+                      type="text"
+                      value={customSectionForm.title}
+                      onChange={(e) => setCustomSectionForm({ ...customSectionForm, title: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700 bg-slate-50 text-slate-800 font-bold"
+                      placeholder="Contoh: Jadwal Pembinaan Agama Triwulanan"
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-extrabold text-slate-700 block">Link URL Gambar Ilustrasi (Opsional)</label>
+                    <input
+                      type="url"
+                      value={customSectionForm.imageUrl}
+                      onChange={(e) => setCustomSectionForm({ ...customSectionForm, imageUrl: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700 bg-slate-50 text-slate-800 font-mono text-xs"
+                      placeholder="https://images.unsplash.com/photo-..."
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="font-extrabold text-slate-700 block">Isi Konten Bagian Kustom *</label>
+                    <textarea
+                      value={customSectionForm.content}
+                      onChange={(e) => setCustomSectionForm({ ...customSectionForm, content: e.target.value })}
+                      rows={5}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700 bg-slate-50 text-slate-800 leading-relaxed font-sans"
+                      placeholder="Tulis penjelasan lengkap bagian kustom di sini..."
+                      required
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2">
+                    <input
+                      type="checkbox"
+                      id="customSectionVisible"
+                      checked={customSectionForm.visible}
+                      onChange={(e) => setCustomSectionForm({ ...customSectionForm, visible: e.target.checked })}
+                      className="w-4 h-4 text-emerald-650 border-slate-300 rounded focus:ring-emerald-500"
+                    />
+                    <label htmlFor="customSectionVisible" className="text-xs text-slate-600 font-bold cursor-pointer select-none">
+                      Tampilkan bagian ini secara publik di Halaman Beranda langsung
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 justify-end p-4 border-t border-slate-100 shrink-0 bg-slate-50">
+                  <button
+                    type="button"
+                    onClick={() => setIsCustomSectionModalOpen(false)}
+                    className="px-4 py-2 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 text-xs font-bold"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleSaveCustomSection}
+                    className="px-5 py-2 bg-emerald-800 text-white rounded-xl text-xs font-black shadow border border-emerald-900"
+                  >
+                    Simpan & Tampilkan
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

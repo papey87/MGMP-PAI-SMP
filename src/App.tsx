@@ -9,7 +9,7 @@ import AISobatGuruTab from "./components/AISobatGuruTab";
 import AdminTab from "./components/AdminTab";
 import ArtikelTab, { SEED_ARTICLES } from "./components/ArtikelTab";
 import LogoMGMP from "./components/LogoMGMP";
-import { collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import { collection, onSnapshot, query, orderBy, doc } from "firebase/firestore";
 import { db, auth } from "./lib/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { 
@@ -100,6 +100,52 @@ export default function App() {
     });
     return () => unsub();
   }, []);
+
+  const [layoutConfig, setLayoutConfig] = useState(() => {
+    try {
+      const saved = localStorage.getItem("custom_layout_config");
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      tabs: [
+        { id: "beranda", label: "Beranda", visible: true },
+        { id: "profil", label: "Profil MGMP", visible: true },
+        { id: "informasi", label: "Informasi", visible: true },
+        { id: "kegiatan", label: "Agenda Kegiatan", visible: true },
+        { id: "perangkat", label: "Perangkat Ajar", visible: true },
+        { id: "artikel", label: "Artikel", visible: true },
+        { id: "ai-sobat", label: "Tanya AI Sobat Guru", visible: true }
+      ]
+    };
+  });
+
+  useEffect(() => {
+    const unsub = onSnapshot(doc(db, "settings", "layout"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.tabs) {
+          setLayoutConfig({ tabs: data.tabs });
+          localStorage.setItem("custom_layout_config", JSON.stringify({ tabs: data.tabs }));
+        }
+      }
+    }, (err) => {
+      console.warn("Layout listener failed in App.tsx:", err);
+    });
+    return () => unsub();
+  }, []);
+
+  // Validate active tab selection
+  useEffect(() => {
+    if (activeTab === "admin") return;
+    const isTabAvailable = (layoutConfig.tabs || []).some((t: any) => t.id === activeTab && t.visible !== false);
+    if (!isTabAvailable) {
+      const firstAvailableTab = (layoutConfig.tabs || []).find((t: any) => t.visible !== false);
+      if (firstAvailableTab) {
+        setActiveTab(firstAvailableTab.id);
+      }
+    }
+  }, [activeTab, layoutConfig.tabs]);
+
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [newsList, setNewsList] = useState<NewsItem[]>(INITIAL_NEWS);
@@ -145,14 +191,26 @@ export default function App() {
     return () => unsub();
   }, []);
 
+  const tabIcons: Record<string, any> = {
+    "beranda": Home,
+    "profil": Users,
+    "informasi": Info,
+    "kegiatan": Calendar,
+    "perangkat": BookOpen,
+    "artikel": FileText,
+    "ai-sobat": Sparkles
+  };
+
+  const dynamicTabs = (layoutConfig.tabs || [])
+    .filter((t: any) => t.visible !== false)
+    .map((t: any) => ({
+      id: t.id,
+      label: t.label,
+      icon: tabIcons[t.id] || Home
+    }));
+
   const tabsConfig = [
-    { id: "beranda", label: "Beranda", icon: Home },
-    { id: "profil", label: "Profil MGMP", icon: Users },
-    { id: "informasi", label: "Informasi", icon: Info },
-    { id: "kegiatan", label: "Agenda Kegiatan", icon: Calendar },
-    { id: "perangkat", label: "Perangkat Ajar", icon: BookOpen },
-    { id: "artikel", label: "Artikel", icon: FileText },
-    { id: "ai-sobat", label: "Tanya AI Sobat Guru", icon: Sparkles },
+    ...dynamicTabs,
     ...(showAdminTab ? [{ id: "admin", label: "Portal Admin", icon: Lock }] : [])
   ];
 
@@ -162,7 +220,7 @@ export default function App() {
       <header id="main-header" className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-emerald-900/10 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Row 1: Logo Brand & Mobile Toggle icon */}
-          <div className="flex items-center justify-between py-2 sm:py-3.5">
+          <div className="flex items-center justify-between py-1.5 sm:py-2">
             {/* Logo Brand Brand Area */}
             <div 
               onClick={() => {
@@ -218,7 +276,7 @@ export default function App() {
           </div>
 
           {/* Row 2: Desktop Navigation Menu - Placed below the logo/portal name for PC layout */}
-          <nav id="desktop-nav" className="hidden lg:flex items-center gap-1.5 pb-3.5 pt-1.5 border-t border-slate-100">
+          <nav id="desktop-nav" className="hidden lg:flex items-center gap-1.5 pb-2 pt-1 border-t border-slate-100">
             {tabsConfig.map((tab) => {
               const isSelected = activeTab === tab.id;
               return (
@@ -273,7 +331,7 @@ export default function App() {
       </header>
 
       {/* MAIN BODY WRAPPER CONTENT */}
-      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+      <main className="flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-4 md:py-6">
         {selectedNews ? (
           /* Immersion News Details Screen Mode */
           <article id="news-immersion" className="max-w-3xl mx-auto space-y-6 animate-fade-in">
@@ -388,7 +446,7 @@ export default function App() {
 
       {/* FOOTER BAR SECTION */}
       <footer id="main-footer" className="bg-slate-900 text-slate-300 border-t border-emerald-950/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             
             {/* Footer column 1: Organization brand about */}
@@ -445,7 +503,7 @@ export default function App() {
           </div>
 
           {/* Under footer license line */}
-          <div className="pt-8 mt-8 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="pt-5 mt-5 border-t border-slate-800 text-center text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-4">
             <p className="font-medium">
               &copy; {new Date().getFullYear()} Portal MGMP PAI SMP. Hak Cipta Dilindungi Undang-Undang.
             </p>

@@ -176,7 +176,7 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
   }, {} as Record<string, { total: number; PNS: number; PPPK: number; NonASN: number }>);
 
   return (
-    <div id="siladik-system" className="space-y-6 pt-4">
+    <div id="siladik-system" className="space-y-4 pt-2">
       <style>{`
         @keyframes blink-accent {
           0%, 100% { opacity: 1; color: #facc15; }
@@ -196,7 +196,7 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
             window.open(announcement.actionUrl, "_blank", "noopener,noreferrer");
           }
         }}
-        className={`bg-[#0e744c] hover:bg-[#0c6341] active:bg-[#0a5236] text-white rounded-3xl p-6 md:p-8 shadow-md border border-emerald-800 flex flex-col justify-between items-start gap-4 transition-all ${
+        className={`bg-[#0e744c] hover:bg-[#0c6341] active:bg-[#0a5236] text-white rounded-3xl p-4 md:p-5 shadow-md border border-emerald-800 flex flex-col justify-between items-start gap-3 transition-all ${
           announcement.actionType !== "none" ? "cursor-pointer group" : ""
         }`}
       >
@@ -262,15 +262,15 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
 
       {/* State: LOADED & READY */}
       {!loading && !error && (
-        <div className="space-y-6">
+        <div className="space-y-4">
           
           {/* VIEW: STATS MODE Only (Lists and Forms are Deleted for Public Privacy) */}
-          <div className="space-y-6 pointer-events-auto">
+          <div className="space-y-4 pointer-events-auto">
             
             {/* Rasio Teritorial (Professional Vertical Column Chart / Diagram Batang Vertikal) */}
-            <div className="bg-white border border-slate-100 rounded-3xl p-6 md:p-8 shadow-sm flex flex-col justify-between space-y-6">
+            <div className="bg-white border border-slate-100 rounded-3xl p-4 md:p-5 shadow-sm flex flex-col justify-between space-y-4">
               
-              <div className="flex flex-col pb-4 border-b border-slate-100 gap-3">
+              <div className="flex flex-col pb-3 border-b border-slate-100 gap-2">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-3 h-3 rounded-full bg-emerald-500 animate-pulse shrink-0"></div>

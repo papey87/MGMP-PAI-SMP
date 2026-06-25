@@ -231,7 +231,7 @@ export default function KegiatanTab() {
   });
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-5">
       {/* Tab Page Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
@@ -245,7 +245,7 @@ export default function KegiatanTab() {
       </div>
 
       {/* Category selector row */}
-      <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 border border-slate-200/50 rounded-2xl">
+      <div className="flex flex-col sm:flex-row gap-3 p-3 bg-slate-50 border border-slate-200/50 rounded-2xl">
         <div className="flex flex-wrap gap-1.5 overflow-x-auto shrink-0 pb-1 sm:pb-0">
           {(["Semua", "Pentas PAI", "Workshop", "Agenda Lainnya"] as const).map((cat) => {
             const isSelected = activeCategory === cat;
@@ -345,7 +345,7 @@ export default function KegiatanTab() {
       )}
 
       {/* Main Events List Row container */}
-      <section id="events-feed" className="grid grid-cols-1 gap-6">
+      <section id="events-feed" className="grid grid-cols-1 gap-4">
         {filteredEvents.map((evt) => {
           const isFull = evt.registeredCount >= evt.quota;
           const leftQuota = evt.quota - evt.registeredCount;
@@ -379,7 +379,7 @@ export default function KegiatanTab() {
               </div>
 
               {/* Event details block */}
-              <div className="p-6 md:p-8 md:w-2/3 flex flex-col justify-between gap-6">
+              <div className="p-4.5 md:p-5 md:w-2/3 flex flex-col justify-between gap-4">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 font-medium select-none">
                     <span className="flex items-center gap-1.5">
@@ -411,7 +411,7 @@ export default function KegiatanTab() {
                 </div>
 
                 {/* Quota display statistics & registration action button row */}
-                <div className="pt-5 mt-2 border-t border-slate-100 flex flex-wrap items-center justify-between gap-4">
+                <div className="pt-3 mt-1.5 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-2 text-xs">
                     <Users className="w-4 h-4 text-slate-400" />
                     <span className="text-slate-600">

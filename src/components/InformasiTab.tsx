@@ -59,7 +59,7 @@ export default function InformasiTab({ news, onSelectNews, onChangeTab }: Inform
   });
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-5 animate-fade-in">
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl md:text-3xl font-extrabold text-slate-800 tracking-tight">
@@ -71,13 +71,13 @@ export default function InformasiTab({ news, onSelectNews, onChangeTab }: Inform
       </div>
 
       {/* Grid Layout: Main News feed and Side Agenda updates */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Left 2 Columns: news feed with filters */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           
           {/* Controls bar */}
-          <div className="flex flex-col sm:flex-row gap-3 p-4 bg-slate-50 border border-slate-200/50 rounded-2xl">
+          <div className="flex flex-col sm:flex-row gap-3 p-3 bg-slate-50 border border-slate-200/50 rounded-2xl">
             {/* Search input */}
             <div className="relative flex-grow">
               <Search className="absolute left-3.5 top-2.5 w-4 h-4 text-slate-400" />
@@ -109,7 +109,7 @@ export default function InformasiTab({ news, onSelectNews, onChangeTab }: Inform
           </div>
 
           {/* News List */}
-          <div id="informasi-feed" className="grid grid-cols-1 gap-6">
+          <div id="informasi-feed" className="grid grid-cols-1 gap-4">
             {filteredNews.length > 0 ? (
               filteredNews.map((item) => (
                 <div
@@ -128,7 +128,7 @@ export default function InformasiTab({ news, onSelectNews, onChangeTab }: Inform
                       {item.category}
                     </div>
                   </div>
-                  <div className="p-6 md:w-3/5 flex flex-col justify-between space-y-4">
+                  <div className="p-4.5 md:w-3/5 flex flex-col justify-between space-y-3">
                     <div className="space-y-2">
                       <div className="flex items-center gap-1.5 text-[11px] text-slate-400 font-medium">
                         <Clock className="w-3.5 h-3.5" />
@@ -141,7 +141,7 @@ export default function InformasiTab({ news, onSelectNews, onChangeTab }: Inform
                         {item.summary}
                       </p>
                     </div>
-                    <div className="pt-2 text-xs text-emerald-800 font-black inline-flex items-center gap-1 group-hover:translate-x-1.5 transition-transform">
+                    <div className="pt-1.5 text-xs text-emerald-800 font-black inline-flex items-center gap-1 group-hover:translate-x-1.5 transition-transform">
                       Baca Rincian Informasi
                       <ArrowRight className="w-3.5 h-3.5" />
                     </div>
@@ -161,10 +161,10 @@ export default function InformasiTab({ news, onSelectNews, onChangeTab }: Inform
         </div>
 
         {/* Right 1 Column: Pembaruan Agenda / Live Activities Status */}
-        <div className="space-y-6">
-          <div className="bg-slate-900 text-white rounded-3xl p-6 shadow-md border border-slate-800 relative overflow-hidden">
+        <div className="space-y-4">
+          <div className="bg-slate-900 text-white rounded-3xl p-4 shadow-md border border-slate-800 relative overflow-hidden">
             <div className="absolute -right-10 -bottom-10 w-28 h-28 bg-emerald-500 rounded-full opacity-10 blur-2xl"></div>
-            <div className="space-y-4 relative">
+            <div className="space-y-3 relative">
               <div className="flex items-center gap-2">
                 <Bell className="w-5 h-5 text-amber-400 shrink-0" />
                 <h3 className="font-extrabold text-sm md:text-base">Pembaruan Agenda Kegiatan</h3>
@@ -175,7 +175,7 @@ export default function InformasiTab({ news, onSelectNews, onChangeTab }: Inform
             </div>
           </div>
 
-          <div className="bg-white border border-slate-100 rounded-3xl p-6 shadow-sm space-y-4">
+          <div className="bg-white border border-slate-100 rounded-3xl p-4 shadow-sm space-y-3">
             <h4 className="font-bold text-slate-800 text-xs uppercase tracking-wider text-slate-400">Pemberitahuan Sistem</h4>
             
             <div className="space-y-4 divide-y divide-slate-50">
