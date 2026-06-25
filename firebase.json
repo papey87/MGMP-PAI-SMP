@@ -1,0 +1,7 @@
+{
+  "hosting": {
+    "site": "mgmp-pai-subang",
+    "public": "public",
+    ...
+  }
+}
