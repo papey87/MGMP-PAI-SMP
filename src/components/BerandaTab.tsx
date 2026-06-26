@@ -68,33 +68,35 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
   const [apkDownloadUrl, setApkDownloadUrl] = useState(() => localStorage.getItem("apk_download_url") || "");
 
   useEffect(() => {
-    const docRef = doc(db, "settings", "apk");
-    const unsub = onSnapshot(docRef, (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.version) {
-          setApkVersion(data.version);
-          localStorage.setItem("apk_version", data.version);
+    fetch("/api/apk-settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          if (data.version) {
+            setApkVersion(data.version);
+            localStorage.setItem("apk_version", data.version);
+          }
+          if (data.build) {
+            setApkBuild(data.build);
+            localStorage.setItem("apk_build", data.build);
+          }
+          if (data.filename) {
+            setApkFilename(data.filename);
+            localStorage.setItem("apk_filename", data.filename);
+          }
+          if (data.size) {
+            setApkSize(data.size);
+            localStorage.setItem("apk_size", data.size);
+          }
+          if (data.downloadUrl) {
+            setApkDownloadUrl(data.downloadUrl);
+            localStorage.setItem("apk_download_url", data.downloadUrl);
+          }
         }
-        if (data.build) {
-          setApkBuild(data.build);
-          localStorage.setItem("apk_build", data.build);
-        }
-        if (data.filename) {
-          setApkFilename(data.filename);
-          localStorage.setItem("apk_filename", data.filename);
-        }
-        if (data.size) {
-          setApkSize(data.size);
-          localStorage.setItem("apk_size", data.size);
-        }
-        if (data.downloadUrl) {
-          setApkDownloadUrl(data.downloadUrl);
-          localStorage.setItem("apk_download_url", data.downloadUrl);
-        }
-      }
-    });
-    return () => unsub();
+      })
+      .catch(err => {
+        console.warn("Failed to fetch local APK settings on Beranda mount:", err);
+      });
   }, []);
 
   const [layoutConfig, setLayoutConfig] = useState(() => {

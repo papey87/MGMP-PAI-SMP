@@ -601,21 +601,26 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
       }
     });
 
-    // 5. Subscribe to APK settings doc
-    const unsubApk = onSnapshot(doc(db, "settings", "apk"), (docSnap) => {
-      if (docSnap.exists()) {
-        const data = docSnap.data();
-        if (data.version !== undefined) setApkVersionInput(data.version);
-        if (data.build !== undefined) setApkBuildInput(data.build);
-        if (data.filename !== undefined) setApkFilenameInput(data.filename);
-        if (data.size !== undefined) setApkSizeInput(data.size);
-        if (data.data !== undefined) setApkDataInput(data.data);
-        if (data.downloadUrl !== undefined) {
-          setApkDownloadUrlInput(data.downloadUrl);
-          localStorage.setItem("apk_download_url", data.downloadUrl);
+    // 5. Fetch APK settings from local server (independent of Firebase)
+    const unsubApk = () => {};
+    fetch("/api/apk-settings")
+      .then(res => res.json())
+      .then(data => {
+        if (data) {
+          if (data.version !== undefined) setApkVersionInput(data.version);
+          if (data.build !== undefined) setApkBuildInput(data.build);
+          if (data.filename !== undefined) setApkFilenameInput(data.filename);
+          if (data.size !== undefined) setApkSizeInput(data.size);
+          if (data.data !== undefined) setApkDataInput(data.data);
+          if (data.downloadUrl !== undefined) {
+            setApkDownloadUrlInput(data.downloadUrl);
+            localStorage.setItem("apk_download_url", data.downloadUrl);
+          }
         }
-      }
-    });
+      })
+      .catch(err => {
+        console.warn("Failed to load local APK settings:", err);
+      });
 
     // 6. Subscribe to Global Announcement settings doc
     const unsubAnnouncement = onSnapshot(doc(db, "settings", "announcement"), (docSnap) => {
@@ -2546,18 +2551,30 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                       localStorage.setItem("apk_size", apkSizeInput);
 
                       try {
-                        await setDoc(doc(db, "settings", "apk"), {
-                          version: apkVersionInput,
-                          build: apkBuildInput,
-                          filename: apkFilenameInput,
-                          size: apkSizeInput,
-                          downloadUrl: finalDownloadUrl
-                        }, { merge: true });
-                        setSuccessMsg("Konfigurasi dan berkas APK berhasil disimpan ke Firebase dan dipublikasikan! Tautan unduhan di Beranda siap diakses para guru.");
+                        const settingsRes = await fetch("/api/apk-settings", {
+                          method: "POST",
+                          headers: {
+                            "Content-Type": "application/json",
+                          },
+                          body: JSON.stringify({
+                            version: apkVersionInput,
+                            build: apkBuildInput,
+                            filename: apkFilenameInput,
+                            size: apkSizeInput,
+                            downloadUrl: finalDownloadUrl
+                          }),
+                        });
+                        
+                        if (!settingsRes.ok) {
+                          const errText = await settingsRes.text();
+                          throw new Error(errText || "Gagal menyimpan metadata di server.");
+                        }
+
+                        setSuccessMsg("Konfigurasi dan berkas APK berhasil disimpan ke server lokal dan dipublikasikan! Tautan unduhan di Beranda siap diakses para guru.");
                         setApkFile(null); // Reset file selection after successful save
                       } catch (err: any) {
-                        console.error("Failed to sync APK to Firestore:", err);
-                        setErrorMsg("Gagal menyimpan metadata APK ke Firebase: " + err.message);
+                        console.error("Failed to save APK settings locally:", err);
+                        setErrorMsg("Gagal menyimpan metadata APK ke server: " + err.message);
                       }
                     }}
                     className={`bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-black py-2.5 px-6 rounded-xl shadow transition-all cursor-pointer border border-emerald-900 flex items-center gap-2 ${

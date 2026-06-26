@@ -21,6 +21,40 @@ if (!fs.existsSync(uploadDir)) {
 // Serve the uploads directory statically
 app.use("/uploads", express.static(uploadDir));
 
+// Endpoint to retrieve APK download metadata (independent of Firebase)
+const apkSettingsPath = path.join(uploadDir, "apk-settings.json");
+
+app.get("/api/apk-settings", (req, res) => {
+  try {
+    if (fs.existsSync(apkSettingsPath)) {
+      const data = fs.readFileSync(apkSettingsPath, "utf-8");
+      return res.json(JSON.parse(data));
+    }
+  } catch (err) {
+    console.error("Error reading apk-settings.json:", err);
+  }
+  // Return default fallbacks if no file exists yet
+  res.json({
+    version: "v1.2.0",
+    build: "Build 2026/06",
+    filename: "mgmp-pai-subang-v12.apk",
+    size: "24.8 MB",
+    downloadUrl: "/uploads/mgmp-app.apk"
+  });
+});
+
+app.post("/api/apk-settings", (req, res) => {
+  try {
+    const { version, build, filename, size, downloadUrl } = req.body;
+    const settings = { version, build, filename, size, downloadUrl };
+    fs.writeFileSync(apkSettingsPath, JSON.stringify(settings, null, 2), "utf-8");
+    res.json({ success: true, settings });
+  } catch (err: any) {
+    console.error("Error writing apk-settings.json:", err);
+    res.status(500).json({ error: "Gagal menyimpan metadata APK lokal: " + err.message });
+  }
+});
+
 // Route to handle APK file uploads as a memory-efficient stream
 app.post(
   "/api/upload-apk",
