@@ -97,7 +97,7 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
     setFoundTeacherInfo(null);
 
     try {
-      const teachersRef = collection(db, "siladik-guru-pai-smp");
+      const teachersRef = collection(db, "users");
       
       // Query by username
       const q = query(teachersRef, where("username", "==", usernameTrimmed));

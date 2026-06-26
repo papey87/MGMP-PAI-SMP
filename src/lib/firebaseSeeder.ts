@@ -217,11 +217,11 @@ const DEFAULT_TEACHERS: TeacherData[] = [
 ];
 
 export async function seedTeachersIfEmpty(): Promise<TeacherData[]> {
-  const colRef = collection(db, "siladik-guru-pai-smp");
+  const colRef = collection(db, "users");
   const snap = await getDocs(colRef);
   
   if (snap.empty) {
-    console.log("Seeding initial teachers data into 'siladik-guru-pai-smp' collection...");
+    console.log("Seeding initial teachers data into 'users' collection...");
     const batch = writeBatch(db);
     
     DEFAULT_TEACHERS.forEach((teacher) => {

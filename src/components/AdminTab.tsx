@@ -496,7 +496,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
     });
 
     // 1. Subscribe to teachers database
-    const qTeachers = query(collection(db, "siladik-guru-pai-smp"), orderBy("createdAt", "desc"));
+    const qTeachers = query(collection(db, "users"), orderBy("createdAt", "desc"));
     const unsubTeachers = onSnapshot(qTeachers, (snap) => {
       const list: TeacherData[] = [];
       snap.forEach((docSnap) => {
@@ -504,7 +504,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
       });
       setTeachers(list);
     }, (err) => {
-      handleFirestoreError(err, OperationType.LIST, "siladik-guru-pai-smp");
+      handleFirestoreError(err, OperationType.LIST, "users");
     });
 
     // 2. Subscribe and seed news collection
@@ -895,20 +895,26 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
         createdAt: new Date().toISOString()
       };
 
-      // Real Dual-Collection Mirror Sync to 'siladik-guru-pai-smp' and 'teachers' collections!
+      // Real Dual-Collection Mirror Sync to 'users' and 'teachers' / 'siladik-guru-pai-smp' collections!
       if (activeTeacherModal === "add") {
-        // Step 1: Add to 'siladik-guru-pai-smp'
-        const mainDoc = await addDoc(collection(db, "siladik-guru-pai-smp"), payload);
-        // Step 2: Mirror also to the literal requested 'teachers' collection
-        await addDoc(collection(db, "teachers"), { ...payload, mirrorId: mainDoc.id });
+        // Step 1: Add to main 'users' collection
+        const mainDoc = await addDoc(collection(db, "users"), payload);
+        
+        // Step 2: Mirror also to 'teachers' and 'siladik-guru-pai-smp' for compatibility
+        try {
+          await addDoc(collection(db, "teachers"), { ...payload, mirrorId: mainDoc.id });
+          await addDoc(collection(db, "siladik-guru-pai-smp"), { ...payload, mirrorId: mainDoc.id });
+        } catch (mirrorErr) {
+          console.warn("Could not sync mirror collections on add:", mirrorErr);
+        }
 
         setSuccessMsg(`Data guru ${payload.nama} berhasil didaftarkan ke sistem!`);
       } else if (activeTeacherModal === "edit" && teacherForm.id) {
-        // Step 1: Update main 'siladik-guru-pai-smp'
-        const mainRef = doc(db, "siladik-guru-pai-smp", teacherForm.id);
+        // Step 1: Update main 'users'
+        const mainRef = doc(db, "users", teacherForm.id);
         await updateDoc(mainRef, payload);
 
-        // Step 2: Also find and update in literal 'teachers' collection matching the ID or name
+        // Step 2: Also find and update in 'teachers' & 'siladik-guru-pai-smp' collections matching the ID, mirrorId, or unique keys
         try {
           const teachersColSnap = await getDocs(collection(db, "teachers"));
           teachersColSnap.forEach(async (docSnap) => {
@@ -917,8 +923,16 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
               await updateDoc(doc(db, "teachers", docSnap.id), payload);
             }
           });
+          
+          const siliColSnap = await getDocs(collection(db, "siladik-guru-pai-smp"));
+          siliColSnap.forEach(async (docSnap) => {
+            const d = docSnap.data();
+            if (d.mirrorId === teacherForm.id || docSnap.id === teacherForm.id || d.nama === payload.nama || d.nuptk === payload.nuptk) {
+              await updateDoc(doc(db, "siladik-guru-pai-smp", docSnap.id), payload);
+            }
+          });
         } catch (mirrorErr) {
-          console.warn("Could not sync mirror teachers collection update: ", mirrorErr);
+          console.warn("Could not sync mirror collections update: ", mirrorErr);
         }
 
         setSuccessMsg(`Data guru ${payload.nama} berhasil diperbarui!`);
@@ -926,7 +940,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
 
       setActiveTeacherModal(null);
     } catch (err) {
-      handleFirestoreError(err, OperationType.WRITE, "siladik-guru-pai-smp");
+      handleFirestoreError(err, OperationType.WRITE, "users");
       setErrorMsg("Gagal menyimpan data guru.");
     }
   };
@@ -936,10 +950,10 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
     setErrorMsg("");
     setSuccessMsg("");
     try {
-      // Step 1: Delete from core 'siladik-guru-pai-smp'
-      await deleteDoc(doc(db, "siladik-guru-pai-smp", id));
+      // Step 1: Delete from core 'users'
+      await deleteDoc(doc(db, "users", id));
 
-      // Step 2: Also delete from double-collection 'teachers' matching mirrorId
+      // Step 2: Also delete from 'teachers' & 'siladik-guru-pai-smp' matching mirrorId or id
       try {
         const teachersColSnap = await getDocs(collection(db, "teachers"));
         teachersColSnap.forEach(async (docSnap) => {
@@ -948,13 +962,21 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
             await deleteDoc(doc(db, "teachers", docSnap.id));
           }
         });
+
+        const siliColSnap = await getDocs(collection(db, "siladik-guru-pai-smp"));
+        siliColSnap.forEach(async (docSnap) => {
+          const d = docSnap.data();
+          if (docSnap.id === id || d.mirrorId === id || d.nama === name) {
+            await deleteDoc(doc(db, "siladik-guru-pai-smp", docSnap.id));
+          }
+        });
       } catch (mirrorErr) {
-        console.warn("Could not delete from mirror teachers collection: ", mirrorErr);
+        console.warn("Could not delete from mirror collections: ", mirrorErr);
       }
 
       setSuccessMsg(`Suksus menghapus data guru ${name}`);
     } catch (err) {
-      handleFirestoreError(err, OperationType.DELETE, `siladik-guru-pai-smp/${id}`);
+      handleFirestoreError(err, OperationType.DELETE, `users/${id}`);
       setErrorMsg("Gagal menghapus data guru.");
     }
   };
@@ -1561,7 +1583,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                 <h3 className="text-sm font-extrabold text-emerald-700 bg-emerald-50 w-max px-3 py-1 rounded-full border border-emerald-100">
                   Aktif Real-time
                 </h3>
-                <p className="text-[11px] text-slate-500 leading-snug font-medium pt-2">Tersinkronisasi dua arah ke Firestore: `siladik-guru-pai-smp` & `teachers` collections.</p>
+                <p className="text-[11px] text-slate-500 leading-snug font-medium pt-2">Tersinkronisasi dua arah ke Firestore: `users`, `siladik-guru-pai-smp` & `teachers` collections.</p>
               </div>
             </div>
 

@@ -108,7 +108,7 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
         await seedTeachersIfEmpty();
 
         const q = query(
-          collection(db, "siladik-guru-pai-smp"),
+          collection(db, "users"),
           orderBy("nama", "asc")
         );
 
