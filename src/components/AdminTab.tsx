@@ -347,7 +347,10 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
   });
 
   const [firebaseDbId, setFirebaseDbId] = useState(() => {
-    return localStorage.getItem("custom_firebase_db_id") || "ai-studio-52c3b800-b7a1-459e-af6e-315e9ae0eb3a";
+    const savedDbId = localStorage.getItem("custom_firebase_db_id");
+    if (savedDbId) return savedDbId;
+    const hasCustom = localStorage.getItem("custom_firebase_config");
+    return hasCustom ? "(default)" : "ai-studio-52c3b800-b7a1-459e-af6e-315e9ae0eb3a";
   });
 
   const [firebaseAuthDomain, setFirebaseAuthDomain] = useState(() => {
@@ -1375,122 +1378,138 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
         </div>
       )}
 
-      {/* Main Subnavigation Selector row styled exactly as requested "seperti tombol menu informasi" */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 bg-slate-50 border border-slate-200/50 rounded-3xl gap-4">
-        <div className="flex flex-wrap gap-1.5 overflow-x-auto shrink-0 w-full sm:w-auto">
-          <button
-            onClick={() => setAdminSubTab("dashboard")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "dashboard"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Activity className="w-4 h-4" />
-            Dashboard Ringkasan
-          </button>
+      {/* Modern Grid Layout: Sidebar Navigation + Sub-tab Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        
+        {/* Left Sidebar Panel */}
+        <div className="lg:col-span-3 space-y-4 bg-slate-50 border border-slate-200 rounded-3xl p-4 lg:sticky lg:top-4 shadow-sm shrink-0">
+          <div className="text-[10px] text-slate-400 font-mono uppercase font-black px-2 tracking-wider pb-1.5 border-b border-slate-200/50">
+            Menu Kontrol Panel
+          </div>
           
-          <button
-            onClick={() => setAdminSubTab("berita")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "berita"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Newspaper className="w-4 h-4" />
-            a. Kelola Informasi & Berita
-          </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-col gap-1.5">
+            <button
+              onClick={() => setAdminSubTab("dashboard")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "dashboard"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Activity className="w-4 h-4 shrink-0" />
+              <span>Dashboard Ringkasan</span>
+            </button>
+            
+            <button
+              onClick={() => setAdminSubTab("berita")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "berita"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Newspaper className="w-4 h-4 shrink-0" />
+              <span>a. Kelola Informasi & Berita</span>
+            </button>
 
-          <button
-            onClick={() => setAdminSubTab("guru")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "guru"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Users className="w-4 h-4" />
-            b. Kelola Database Guru PAI
-          </button>
+            <button
+              onClick={() => setAdminSubTab("guru")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "guru"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Users className="w-4 h-4 shrink-0" />
+              <span>b. Kelola Database Guru</span>
+            </button>
 
-          <button
-            onClick={() => setAdminSubTab("profil_mgmp")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "profil_mgmp"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Building2 className="w-4 h-4 text-emerald-600" />
-            c. Kelola Profil & Organisasi
-          </button>
+            <button
+              onClick={() => setAdminSubTab("profil_mgmp")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "profil_mgmp"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Building2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>c. Kelola Profil MGMP</span>
+            </button>
 
-          <button
-            onClick={() => setAdminSubTab("kelola_apk")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "kelola_apk"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Smartphone className="w-4 h-4 text-[#009640]" />
-            d. Kelola Aplikasi APK
-          </button>
+            <button
+              onClick={() => setAdminSubTab("kelola_apk")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "kelola_apk"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Smartphone className="w-4 h-4 text-[#009640] shrink-0" />
+              <span>d. Kelola Aplikasi APK</span>
+            </button>
 
-          <button
-            onClick={() => setAdminSubTab("integrasi_firebase")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "integrasi_firebase"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Database className="w-4 h-4 text-amber-500" />
-            e. Integrasi Firebase
-          </button>
+            <button
+              onClick={() => setAdminSubTab("integrasi_firebase")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "integrasi_firebase"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Database className="w-4 h-4 text-amber-500 shrink-0" />
+              <span>e. Integrasi Firebase</span>
+            </button>
 
-          <button
-            onClick={() => setAdminSubTab("kelola_pemberitahuan")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "kelola_pemberitahuan"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Megaphone className="w-4 h-4 text-rose-500" />
-            f. Kelola Pemberitahuan PENTING
-          </button>
+            <button
+              onClick={() => setAdminSubTab("kelola_pemberitahuan")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "kelola_pemberitahuan"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Megaphone className="w-4 h-4 text-rose-500 shrink-0" />
+              <span>f. Kelola Pengumuman</span>
+            </button>
 
-          <button
-            onClick={() => setAdminSubTab("kelola_tata_letak")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "kelola_tata_letak"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Sliders className="w-4 h-4 text-indigo-500" />
-            g. Kelola Tata Letak & Elemen
-          </button>
+            <button
+              onClick={() => setAdminSubTab("kelola_tata_letak")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "kelola_tata_letak"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Sliders className="w-4 h-4 text-indigo-500 shrink-0" />
+              <span>g. Kelola Tata Letak</span>
+            </button>
 
-          <button
-            onClick={() => setAdminSubTab("api_monitoring")}
-            className={`flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold transition-all cursor-pointer ${
-              adminSubTab === "api_monitoring"
-                ? "bg-emerald-800 text-white shadow-md font-black"
-                : "bg-white text-slate-600 border border-slate-200/70 hover:bg-slate-50"
-            }`}
-          >
-            <Cpu className="w-4 h-4" />
-            Pantau Penggunaan API
-          </button>
+            <button
+              onClick={() => setAdminSubTab("api_monitoring")}
+              className={`flex items-center gap-2.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                adminSubTab === "api_monitoring"
+                  ? "bg-emerald-800 text-white shadow font-black"
+                  : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+              }`}
+            >
+              <Cpu className="w-4 h-4 shrink-0" />
+              <span>Pantau Penggunaan API</span>
+            </button>
+          </div>
+          
+          <div className="border-t border-slate-200 pt-3 px-1 flex flex-col gap-1">
+            <div className="flex justify-between items-center text-[9px] text-slate-400 font-mono uppercase font-black">
+              <span>Sistem Firestore</span>
+              <span className="text-emerald-700 font-extrabold">Online</span>
+            </div>
+            <div className="text-[9px] text-slate-400 font-mono leading-tight break-all">
+              DB: {firebaseDbId === "ai-studio-52c3b800-b7a1-459e-af6e-315e9ae0eb3a" ? "Sandbox" : firebaseDbId}
+            </div>
+          </div>
         </div>
 
-        <div className="text-[10px] text-slate-400 font-mono text-right shrink-0 uppercase font-bold">
-          Sistem Online: Firestore Real-Time
-        </div>
-      </div>
+        {/* Right Content Panel */}
+        <div className="lg:col-span-9 space-y-6">
 
       {/* SUB TAB 1: DASHBOARD METRICS MAP OVERVIEW */}
       {adminSubTab === "dashboard" && (
@@ -2491,11 +2510,24 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                           });
 
                           if (!res.ok) {
-                            const errData = await res.json();
-                            throw new Error(errData.error || "Gagal mengunggah berkas APK ke server.");
+                            const resText = await res.text();
+                            let errMsg = `Gagal mengunggah berkas APK (Status ${res.status})`;
+                            try {
+                              const errData = JSON.parse(resText);
+                              errMsg = errData.error || errMsg;
+                            } catch (e) {
+                              errMsg += ": " + resText.substring(0, 150);
+                            }
+                            throw new Error(errMsg);
                           }
 
-                          const data = await res.json();
+                          const resText = await res.text();
+                          let data;
+                          try {
+                            data = JSON.parse(resText);
+                          } catch (e) {
+                            throw new Error("Respon server bukan JSON valid: " + resText.substring(0, 150));
+                          }
                           finalDownloadUrl = data.downloadUrl;
                           setApkDownloadUrlInput(data.downloadUrl);
                           localStorage.setItem("apk_download_url", data.downloadUrl);
@@ -3542,6 +3574,9 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
           )}
         </div>
       )}
+
+        </div>
+      </div>
 
       {/* MODAL 1: ADD / EDIT NEWS */}
       {activeNewsModal && (

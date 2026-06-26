@@ -29,9 +29,15 @@ try {
 const app = initializeApp(firebaseConfig);
 
 let firestoreDbId = "ai-studio-52c3b800-b7a1-459e-af6e-315e9ae0eb3a";
+const savedCustomConfig = localStorage.getItem("custom_firebase_config");
+if (savedCustomConfig) {
+  // If we have custom firebase configuration, default database ID is "(default)" unless a custom ID is specified
+  firestoreDbId = "(default)";
+}
+
 try {
   const savedDbId = localStorage.getItem("custom_firebase_db_id");
-  if (savedDbId) {
+  if (savedDbId && savedDbId.trim() !== "" && savedDbId !== "ai-studio-52c3b800-b7a1-459e-af6e-315e9ae0eb3a") {
     firestoreDbId = savedDbId;
   }
 } catch (e) {

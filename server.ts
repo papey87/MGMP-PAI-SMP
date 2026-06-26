@@ -21,28 +21,34 @@ if (!fs.existsSync(uploadDir)) {
 // Serve the uploads directory statically
 app.use("/uploads", express.static(uploadDir));
 
-// Route to handle APK file uploads as a raw octet-stream
+// Route to handle APK file uploads as a memory-efficient stream
 app.post(
   "/api/upload-apk",
-  express.raw({ type: "application/octet-stream", limit: "150mb" }),
   (req, res) => {
+    console.log("Incoming APK upload request received...");
     try {
       const filename = (req.headers["x-filename"] as string) || "mgmp-app.apk";
       // Sanitize the filename to prevent directory traversal
       const safeFilename = path.basename(filename);
       const targetPath = path.join(uploadDir, safeFilename);
 
-      if (!req.body || req.body.length === 0) {
-        return res.status(400).json({ error: "Isi berkas kosong atau tidak valid." });
-      }
+      console.log(`Streaming uploaded file to: ${targetPath}`);
+      const writeStream = fs.createWriteStream(targetPath);
+      
+      req.pipe(writeStream);
 
-      fs.writeFileSync(targetPath, req.body);
-      console.log(`Successfully saved APK to ${targetPath}`);
+      writeStream.on("finish", () => {
+        console.log(`Successfully streamed and saved APK to ${targetPath}`);
+        const downloadUrl = `/uploads/${safeFilename}`;
+        res.json({ success: true, downloadUrl, filename: safeFilename });
+      });
 
-      const downloadUrl = `/uploads/${safeFilename}`;
-      res.json({ success: true, downloadUrl, filename: safeFilename });
+      writeStream.on("error", (error) => {
+        console.error("Stream error writing APK file:", error);
+        res.status(500).json({ error: "Gagal menulis file APK di server." });
+      });
     } catch (error: any) {
-      console.error("Error writing APK file:", error);
+      console.error("Error setting up stream:", error);
       res.status(500).json({ error: error.message || "Gagal menyimpan berkas APK di server." });
     }
   }
