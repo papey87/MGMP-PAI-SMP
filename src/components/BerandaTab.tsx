@@ -22,7 +22,8 @@ import {
   Check,
   PenTool,
   Plus,
-  Sparkles
+  Sparkles,
+  Copy
 } from "lucide-react";
 
 interface BerandaTabProps {
@@ -58,6 +59,7 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
   const [isApkModalOpen, setIsApkModalOpen] = useState(false);
   const [dlProgress, setDlProgress] = useState(0);
   const [dlState, setDlState] = useState<"idle" | "downloading" | "success">("idle");
+  const [copiedApkLink, setCopiedApkLink] = useState(false);
 
   const latestArticles = articles.slice(0, 4);
 
@@ -508,14 +510,58 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
                     <p className="text-xs md:text-sm text-slate-500 font-semibold">
                       Unduh berkas instalasi mandiri aman untuk semua jenis perangkat smartphone berbasis Android.
                     </p>
-                    <button
-                      type="button"
-                      onClick={startApkDownload}
-                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-xs md:text-sm font-black shadow-md shadow-emerald-200 inline-flex items-center gap-2 transition-all cursor-pointer active:scale-95"
-                    >
-                      <Download className="w-4 h-4" />
-                      Mulai Unduh APK ({apkSize})
-                    </button>
+                    <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={startApkDownload}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-8 py-3.5 rounded-xl text-xs md:text-sm font-black shadow-md shadow-emerald-200 inline-flex items-center gap-2 transition-all cursor-pointer active:scale-95"
+                      >
+                        <Download className="w-4 h-4" />
+                        Mulai Unduh APK ({apkSize})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = apkDownloadUrl || `/uploads/${apkFilename}`;
+                          const fullUrl = url.startsWith("http") ? url : window.location.origin + url;
+                          navigator.clipboard.writeText(fullUrl).then(() => {
+                            setCopiedApkLink(true);
+                            setTimeout(() => setCopiedApkLink(false), 2000);
+                          }).catch((err) => {
+                            try {
+                              const textarea = document.createElement("textarea");
+                              textarea.value = fullUrl;
+                              textarea.style.position = "fixed";
+                              document.body.appendChild(textarea);
+                              textarea.select();
+                              document.execCommand("copy");
+                              document.body.removeChild(textarea);
+                              setCopiedApkLink(true);
+                              setTimeout(() => setCopiedApkLink(false), 2000);
+                            } catch (e) {
+                              alert("Gagal menyalin tautan: " + String(e));
+                            }
+                          });
+                        }}
+                        className={`px-6 py-3.5 rounded-xl text-xs md:text-sm font-black shadow-sm transition-all inline-flex items-center gap-2 cursor-pointer border ${
+                          copiedApkLink 
+                            ? "bg-emerald-100 text-emerald-805 border-emerald-200" 
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {copiedApkLink ? (
+                          <>
+                            <Check className="w-4 h-4 text-emerald-600" />
+                            Tersalin ke Papan Klip!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-4 h-4 text-slate-500" />
+                            Salin Link Unduh
+                          </>
+                        )}
+                      </button>
+                    </div>
                     <p className="text-[10px] text-slate-400 font-medium font-semibold">Berkas baru dipindai & aman oleh Google Play Protect</p>
                   </div>
                 )}

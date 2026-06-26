@@ -71,7 +71,8 @@ import {
   MoveDown,
   PencilLine,
   LayoutGrid,
-  RefreshCw
+  RefreshCw,
+  Copy
 } from "lucide-react";
 
 // For error logging wrapper
@@ -311,6 +312,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
   const [apkDownloadUrlInput, setApkDownloadUrlInput] = useState(() => localStorage.getItem("apk_download_url") || "");
   const [apkFile, setApkFile] = useState<File | null>(null);
   const [isUploadingApk, setIsUploadingApk] = useState(false);
+  const [copiedApkLink, setCopiedApkLink] = useState(false);
 
   // Firebase configuration management states
   const [firebaseApiKey, setFirebaseApiKey] = useState(() => {
@@ -2454,13 +2456,57 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                   </div>
                   <div className="space-y-1.5 sm:col-span-2">
                     <label className="font-extrabold text-[11px] text-slate-500 block">Tautan Unduhan Langsung APK (Ditentukan Otomatis / Bisa Kustom)</label>
-                    <input 
-                      type="text" 
-                      value={apkDownloadUrlInput}
-                      onChange={(e) => setApkDownloadUrlInput(e.target.value)}
-                      className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700 text-slate-800 font-mono text-xs"
-                      placeholder="Contoh: /uploads/mgmp-app.apk atau link Google Drive / Dropbox"
-                    />
+                    <div className="flex gap-2">
+                      <input 
+                        type="text" 
+                        value={apkDownloadUrlInput}
+                        onChange={(e) => setApkDownloadUrlInput(e.target.value)}
+                        className="flex-grow px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700 text-slate-800 font-mono text-xs"
+                        placeholder="Contoh: /uploads/mgmp-app.apk atau link Google Drive / Dropbox"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const url = apkDownloadUrlInput || `/uploads/${apkFilenameInput}`;
+                          const fullUrl = url.startsWith("http") ? url : window.location.origin + url;
+                          navigator.clipboard.writeText(fullUrl).then(() => {
+                            setCopiedApkLink(true);
+                            setTimeout(() => setCopiedApkLink(false), 2000);
+                          }).catch((err) => {
+                            try {
+                              const textarea = document.createElement("textarea");
+                              textarea.value = fullUrl;
+                              textarea.style.position = "fixed";
+                              document.body.appendChild(textarea);
+                              textarea.select();
+                              document.execCommand("copy");
+                              document.body.removeChild(textarea);
+                              setCopiedApkLink(true);
+                              setTimeout(() => setCopiedApkLink(false), 2000);
+                            } catch (e) {
+                              alert("Gagal menyalin tautan: " + String(e));
+                            }
+                          });
+                        }}
+                        className={`px-4 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer border ${
+                          copiedApkLink 
+                            ? "bg-emerald-105 text-emerald-800 border-emerald-200 bg-emerald-100" 
+                            : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50"
+                        }`}
+                      >
+                        {copiedApkLink ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-600" />
+                            Tersalin!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5 text-slate-500" />
+                            Salin Link
+                          </>
+                        )}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -2557,6 +2603,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                       localStorage.setItem("apk_build", apkBuildInput);
                       localStorage.setItem("apk_filename", apkFilenameInput);
                       localStorage.setItem("apk_size", apkSizeInput);
+                      localStorage.setItem("apk_download_url", finalDownloadUrl);
 
                       try {
                         const settingsRes = await fetch("/api/apk-settings", {
