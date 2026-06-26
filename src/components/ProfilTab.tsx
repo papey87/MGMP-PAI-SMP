@@ -134,10 +134,20 @@ export default function ProfilTab() {
         if (data.visi !== undefined) {
           setProfileVisi(data.visi);
           setTempVisi(data.visi);
+          localStorage.setItem("mgmp_profile_visi", data.visi);
         }
-        if (data.misi !== undefined) setProfileMisi(data.misi);
-        if (data.tujuan !== undefined) setProfileTujuan(data.tujuan);
-        if (data.structure !== undefined) setStructureList(data.structure);
+        if (data.misi !== undefined) {
+          setProfileMisi(data.misi);
+          localStorage.setItem("mgmp_profile_misi", JSON.stringify(data.misi));
+        }
+        if (data.tujuan !== undefined) {
+          setProfileTujuan(data.tujuan);
+          localStorage.setItem("mgmp_profile_tujuan", JSON.stringify(data.tujuan));
+        }
+        if (data.structure !== undefined) {
+          setStructureList(data.structure);
+          localStorage.setItem("mgmp_profile_structure", JSON.stringify(data.structure));
+        }
       } else {
         // Seed initial values to Firestore if it doesn't exist yet
         setDoc(docRef, {
