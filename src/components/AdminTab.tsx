@@ -2661,14 +2661,14 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                     <p className="text-[10px] text-emerald-250 leading-relaxed font-semibold">Versi {apkVersionInput} ({apkBuildInput})</p>
                   </div>
                   <div className="pt-1.5">
-  <a 
-    href={finalDownloadUrl || "#"} // Menggunakan state URL unduhan yang ada di baris atas kode Anda
-    download={`MGMP-PAI-Aplikasi-${apkVersionInput}.apk`}
-    className="block w-full bg-amber-400 text-emerald-950 font-black p-2.5 rounded-xl text-center text-[10px] cursor-pointer select-none hover:bg-amber-500 transition-colors"
-  >
-    Mulai Unduh APK ({apkSizeInput})
-  </a>
-</div>
+                  <a 
+                    href={finalDownloadUrl || "#"} // Menggunakan state URL unduhan yang ada di baris atas kode Anda
+                    download={`app-release.apk-${apkVersionInput}.apk`}
+                    className="block w-full bg-amber-400 text-emerald-950 font-black p-2.5 rounded-xl text-center text-[10px] cursor-pointer select-none hover:bg-amber-500 transition-colors"
+                  >
+                  Mulai Unduh APK ({apkSizeInput})
+                  </a>
+                  </div>
                     </div>
                   </div>
                 </div>
