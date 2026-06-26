@@ -37,9 +37,9 @@ app.get("/api/apk-settings", (req, res) => {
   res.json({
     version: "v1.2.0",
     build: "Build 2026/06",
-    filename: "mgmp-pai-subang-v12.apk",
+    filename: "app-release.apk",
     size: "24.8 MB",
-    downloadUrl: "/uploads/mgmp-app.apk"
+    downloadUrl: "/uploads/app-release.apk"
   });
 });
 
@@ -61,45 +61,49 @@ app.post(
   (req, res) => {
     console.log("Incoming APK upload request received...");
     try {
-      const filename = (req.headers["x-filename"] as string) || "mgmp-app.apk";
+      const filename = (req.headers["x-filename"] as string) || "app-release.apk";
       // Sanitize the filename to prevent directory traversal
       const safeFilename = path.basename(filename);
       const targetPath = path.join(uploadDir, safeFilename);
 
-      console.log(`Streaming uploaded file to: ${targetPath}`);
-      const writeStream = fs.createWriteStream(targetPath);
+      console.log(`Accumulating chunks for uploaded file: ${targetPath}`);
       
+      const chunks: Buffer[] = [];
       let bytesUploaded = 0;
       const limit = 100 * 1024 * 1024; // 100 MB limit
       let aborted = false;
 
       req.on("data", (chunk) => {
+        if (aborted) return;
         bytesUploaded += chunk.length;
-        if (bytesUploaded > limit && !aborted) {
+        if (bytesUploaded > limit) {
           aborted = true;
-          writeStream.destroy();
-          fs.unlink(targetPath, () => {
-            console.log("Cleaned up partial file exceeding 100MB limit.");
-          });
+          console.warn(`Upload aborted: file exceeded limit of 100MB (${bytesUploaded} bytes)`);
           res.status(413).json({ error: "Ukuran berkas APK melebihi batas maksimal 100 MB." });
           req.destroy();
+          return;
         }
+        chunks.push(chunk);
       });
 
-      req.pipe(writeStream);
-
-      writeStream.on("finish", () => {
-        if (!aborted) {
-          console.log(`Successfully streamed and saved APK to ${targetPath}`);
+      req.on("end", () => {
+        if (aborted) return;
+        try {
+          const buffer = Buffer.concat(chunks);
+          fs.writeFileSync(targetPath, buffer);
+          console.log(`Successfully saved APK file to ${targetPath} (${bytesUploaded} bytes)`);
           const downloadUrl = `/uploads/${safeFilename}`;
           res.json({ success: true, downloadUrl, filename: safeFilename });
+        } catch (err: any) {
+          console.error("Error writing saved file:", err);
+          res.status(500).json({ error: "Gagal menyimpan berkas di server: " + err.message });
         }
       });
 
-      writeStream.on("error", (error) => {
-        if (!aborted) {
-          console.error("Stream error writing APK file:", error);
-          res.status(500).json({ error: "Gagal menulis file APK di server." });
+      req.on("error", (err) => {
+        console.error("Request stream error:", err);
+        if (!res.headersSent) {
+          res.status(500).json({ error: "Gagal membaca berkas unggahan: " + err.message });
         }
       });
     } catch (error: any) {

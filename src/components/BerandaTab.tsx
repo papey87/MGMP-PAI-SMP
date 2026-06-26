@@ -65,9 +65,9 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
 
   const [apkVersion, setApkVersion] = useState(() => localStorage.getItem("apk_version") || "v1.2.0");
   const [apkBuild, setApkBuild] = useState(() => localStorage.getItem("apk_build") || "Build 2026/06");
-  const [apkFilename, setApkFilename] = useState(() => localStorage.getItem("apk_filename") || "mgmp-pai-subang-v12.apk");
+  const [apkFilename, setApkFilename] = useState(() => localStorage.getItem("apk_filename") || "app-release.apk");
   const [apkSize, setApkSize] = useState(() => localStorage.getItem("apk_size") || "24.8 MB");
-  const [apkDownloadUrl, setApkDownloadUrl] = useState(() => localStorage.getItem("apk_download_url") || "");
+  const [apkDownloadUrl, setApkDownloadUrl] = useState(() => localStorage.getItem("apk_download_url") || "/uploads/app-release.apk");
 
   useEffect(() => {
     fetch("/api/apk-settings")
@@ -138,12 +138,16 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
 
   const triggerActualDownload = () => {
     const url = apkDownloadUrl || `/uploads/${apkFilename}`;
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", apkFilename);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      window.open(url, "_blank", "noopener,noreferrer");
+    } else {
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", apkFilename || "app-release.apk");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   const startApkDownload = () => {
@@ -630,7 +634,7 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
                     {
                       step: "01",
                       title: "Unduh Berkas APK",
-                      desc: "Tekan tombol unduh berkas di atas. File 'mgmp-pai-subang-v12.apk' (24.8 MB) akan tersimpan langsung ke folder Unduhan di memori HP Anda."
+                      desc: `Tekan tombol unduh berkas di atas. File '${apkFilename}' (${apkSize}) akan tersimpan langsung ke folder Unduhan di memori HP Anda.`
                     },
                     {
                       step: "02",

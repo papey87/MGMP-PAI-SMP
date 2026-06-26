@@ -306,10 +306,10 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
   // APK management states
   const [apkVersionInput, setApkVersionInput] = useState(() => localStorage.getItem("apk_version") || "v1.2.0");
   const [apkBuildInput, setApkBuildInput] = useState(() => localStorage.getItem("apk_build") || "Build 2026/06");
-  const [apkFilenameInput, setApkFilenameInput] = useState(() => localStorage.getItem("apk_filename") || "mgmp-pai-subang-v12.apk");
+  const [apkFilenameInput, setApkFilenameInput] = useState(() => localStorage.getItem("apk_filename") || "app-release.apk");
   const [apkSizeInput, setApkSizeInput] = useState(() => localStorage.getItem("apk_size") || "24.8 MB");
   const [apkDataInput, setApkDataInput] = useState(() => localStorage.getItem("apk_data") || "");
-  const [apkDownloadUrlInput, setApkDownloadUrlInput] = useState(() => localStorage.getItem("apk_download_url") || "");
+  const [apkDownloadUrlInput, setApkDownloadUrlInput] = useState(() => localStorage.getItem("apk_download_url") || "/uploads/app-release.apk");
   const [apkFile, setApkFile] = useState<File | null>(null);
   const [isUploadingApk, setIsUploadingApk] = useState(false);
   const [copiedApkLink, setCopiedApkLink] = useState(false);
@@ -2441,7 +2441,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                       value={apkFilenameInput}
                       onChange={(e) => setApkFilenameInput(e.target.value)}
                       className="w-full px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700 text-slate-800 font-mono text-xs"
-                      placeholder="Contoh: mgmp-pai-subang-v12.apk"
+                      placeholder="Contoh: app-release.apk"
                     />
                   </div>
                   <div className="space-y-1.5">
@@ -2462,7 +2462,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                         value={apkDownloadUrlInput}
                         onChange={(e) => setApkDownloadUrlInput(e.target.value)}
                         className="flex-grow px-3 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-emerald-700 text-slate-800 font-mono text-xs"
-                        placeholder="Contoh: /uploads/mgmp-app.apk atau link Google Drive / Dropbox"
+                        placeholder="Contoh: /uploads/app-release.apk atau link Google Drive / Dropbox"
                       />
                       <button
                         type="button"
@@ -2531,10 +2531,11 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                           return;
                         }
                         setApkFile(file);
-                        setApkFilenameInput(file.name);
+                        // Set destination filename to app-release.apk as requested
+                        setApkFilenameInput("app-release.apk");
                         const fileMb = (file.size / (1024 * 1024)).toFixed(1) + " MB";
                         setApkSizeInput(fileMb);
-                        setSuccessMsg("Berkas APK \"" + file.name + "\" (" + fileMb + ") siap diunggah. Klik tombol Simpan & Publikasikan APK di bawah untuk memulai proses pengunggahan ke server.");
+                        setSuccessMsg("Berkas APK \"" + file.name + "\" (" + fileMb + ") siap diunggah dengan nama \"app-release.apk\". Klik tombol Simpan & Publikasikan APK di bawah untuk memulai proses pengunggahan ke server.");
                       }
                     }}
                     className="mt-3 text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-emerald-800 file:text-white hover:file:bg-emerald-700 cursor-pointer"
@@ -2661,14 +2662,8 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                     <p className="text-[10px] text-emerald-250 leading-relaxed font-semibold">Versi {apkVersionInput} ({apkBuildInput})</p>
                   </div>
                   <div className="pt-1.5">
-                  <a 
-                    href={finalDownloadUrl || "#"} // Menggunakan state URL unduhan yang ada di baris atas kode Anda
-                    download={`app-release.apk-${apkVersionInput}.apk`}
-                    className="block w-full bg-amber-400 text-emerald-950 font-black p-2.5 rounded-xl text-center text-[10px] cursor-pointer select-none hover:bg-amber-500 transition-colors"
-                  >
-                  Mulai Unduh APK ({apkSizeInput})
-                  </a>
-                  </div>
+                    <div className="w-full bg-amber-405 text-emerald-950 font-black p-2.5 rounded-xl text-center text-[10px] cursor-not-allowed select-none bg-amber-400">
+                      Mulai Unduh APK ({apkSizeInput})
                     </div>
                   </div>
                 </div>
