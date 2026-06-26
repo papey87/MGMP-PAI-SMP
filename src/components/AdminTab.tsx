@@ -2468,7 +2468,7 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                 <div className="space-y-2 p-5 bg-emerald-50/50 rounded-2xl border border-emerald-100 flex flex-col items-center">
                   <Smartphone className="w-8 h-8 text-emerald-800 mb-1 animate-pulse" />
                   <span className="font-black text-xs text-slate-700">Unggah Berkas APK Baru</span>
-                  <p className="text-[10px] text-slate-400 text-center max-w-sm mt-0.5 leading-relaxed font-semibold">Pilih berkas .apk langsung dari komputer Anda. Sistem akan mengunggah berkas tersebut ke server dan menghasilkan tautan unduhan otomatis secara real-time.</p>
+                  <p className="text-[10px] text-slate-400 text-center max-w-sm mt-0.5 leading-relaxed font-semibold">Pilih berkas .apk langsung dari komputer Anda. Sistem akan mengunggah berkas tersebut ke server dan menghasilkan tautan unduhan otomatis secara real-time. Batas ukuran berkas maksimal adalah 100 MB.</p>
                   
                   <input 
                     type="file" 
@@ -2476,11 +2476,19 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) {
+                        setErrorMsg("");
+                        setSuccessMsg("");
+                        if (file.size > 100 * 1024 * 1024) {
+                          setErrorMsg("Ukuran berkas APK melebihi batas maksimal 100 MB. Silakan pilih berkas yang lebih kecil.");
+                          setApkFile(null);
+                          e.target.value = "";
+                          return;
+                        }
                         setApkFile(file);
                         setApkFilenameInput(file.name);
                         const fileMb = (file.size / (1024 * 1024)).toFixed(1) + " MB";
                         setApkSizeInput(fileMb);
-                        setSuccessMsg("Berkas APK \"" + file.name + "\" (" + fileMb + ") siap diunggah. Klik tombol Simpan di bawah untuk memulai proses pengunggahan ke server.");
+                        setSuccessMsg("Berkas APK \"" + file.name + "\" (" + fileMb + ") siap diunggah. Klik tombol Simpan & Publikasikan APK di bawah untuk memulai proses pengunggahan ke server.");
                       }
                     }}
                     className="mt-3 text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:text-[10px] file:font-black file:bg-emerald-800 file:text-white hover:file:bg-emerald-700 cursor-pointer"

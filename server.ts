@@ -55,7 +55,7 @@ app.post("/api/apk-settings", (req, res) => {
   }
 });
 
-// Route to handle APK file uploads as a memory-efficient stream
+// Route to handle APK file uploads as a memory-efficient stream with a 100MB limit
 app.post(
   "/api/upload-apk",
   (req, res) => {
@@ -69,17 +69,38 @@ app.post(
       console.log(`Streaming uploaded file to: ${targetPath}`);
       const writeStream = fs.createWriteStream(targetPath);
       
+      let bytesUploaded = 0;
+      const limit = 100 * 1024 * 1024; // 100 MB limit
+      let aborted = false;
+
+      req.on("data", (chunk) => {
+        bytesUploaded += chunk.length;
+        if (bytesUploaded > limit && !aborted) {
+          aborted = true;
+          writeStream.destroy();
+          fs.unlink(targetPath, () => {
+            console.log("Cleaned up partial file exceeding 100MB limit.");
+          });
+          res.status(413).json({ error: "Ukuran berkas APK melebihi batas maksimal 100 MB." });
+          req.destroy();
+        }
+      });
+
       req.pipe(writeStream);
 
       writeStream.on("finish", () => {
-        console.log(`Successfully streamed and saved APK to ${targetPath}`);
-        const downloadUrl = `/uploads/${safeFilename}`;
-        res.json({ success: true, downloadUrl, filename: safeFilename });
+        if (!aborted) {
+          console.log(`Successfully streamed and saved APK to ${targetPath}`);
+          const downloadUrl = `/uploads/${safeFilename}`;
+          res.json({ success: true, downloadUrl, filename: safeFilename });
+        }
       });
 
       writeStream.on("error", (error) => {
-        console.error("Stream error writing APK file:", error);
-        res.status(500).json({ error: "Gagal menulis file APK di server." });
+        if (!aborted) {
+          console.error("Stream error writing APK file:", error);
+          res.status(500).json({ error: "Gagal menulis file APK di server." });
+        }
       });
     } catch (error: any) {
       console.error("Error setting up stream:", error);
