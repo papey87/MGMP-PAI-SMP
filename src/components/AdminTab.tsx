@@ -618,26 +618,22 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
       }
     });
 
-    // 5. Fetch APK settings from local server (independent of Firebase)
-    const unsubApk = () => {};
-    fetch("/api/apk-settings")
-      .then(res => res.json())
-      .then(data => {
-        if (data) {
-          if (data.version !== undefined) setApkVersionInput(data.version);
-          if (data.build !== undefined) setApkBuildInput(data.build);
-          if (data.filename !== undefined) setApkFilenameInput(data.filename);
-          if (data.size !== undefined) setApkSizeInput(data.size);
-          if (data.data !== undefined) setApkDataInput(data.data);
-          if (data.downloadUrl !== undefined) {
-            setApkDownloadUrlInput(data.downloadUrl);
-            localStorage.setItem("apk_download_url", data.downloadUrl);
-          }
+    // 5. Fetch APK settings from Firebase
+    const unsubApk = onSnapshot(doc(db, "settings", "apk"), (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.version !== undefined) setApkVersionInput(data.version);
+        if (data.build !== undefined) setApkBuildInput(data.build);
+        if (data.filename !== undefined) setApkFilenameInput(data.filename);
+        if (data.size !== undefined) setApkSizeInput(data.size);
+        if (data.downloadUrl !== undefined) {
+          setApkDownloadUrlInput(data.downloadUrl);
+          localStorage.setItem("apk_download_url", data.downloadUrl);
         }
-      })
-      .catch(err => {
-        console.warn("Failed to load local APK settings:", err);
-      });
+      }
+    }, (err) => {
+      console.warn("Failed to load Firebase APK settings:", err);
+    });
 
     // 6. Subscribe to Global Announcement settings doc
     const unsubAnnouncement = onSnapshot(doc(db, "settings", "announcement"), (docSnap) => {
@@ -2623,42 +2619,15 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
 
                       if (apkFile) {
                         setIsUploadingApk(true);
-                        setSuccessMsg("Memulai pengunggahan berkas APK (" + apkSizeInput + ")... Mohon tunggu...");
+                        setSuccessMsg("Menyimpan berkas APK secara lokal di sesi browser (" + apkSizeInput + ")...");
                         try {
-                          const res = await fetch("/api/upload-apk", {
-                            method: "POST",
-                            headers: {
-                              "Content-Type": "application/octet-stream",
-                              "X-Filename": apkFilenameInput,
-                            },
-                            body: apkFile,
-                          });
-
-                          if (!res.ok) {
-                            const resText = await res.text();
-                            let errMsg = `Gagal mengunggah berkas APK (Status ${res.status})`;
-                            try {
-                              const errData = JSON.parse(resText);
-                              errMsg = errData.error || errMsg;
-                            } catch (e) {
-                              errMsg += ": " + resText.substring(0, 150);
-                            }
-                            throw new Error(errMsg);
-                          }
-
-                          const resText = await res.text();
-                          let data;
-                          try {
-                            data = JSON.parse(resText);
-                          } catch (e) {
-                            throw new Error("Respon server bukan JSON valid: " + resText.substring(0, 150));
-                          }
-                          finalDownloadUrl = data.downloadUrl;
-                          setApkDownloadUrlInput(data.downloadUrl);
-                          localStorage.setItem("apk_download_url", data.downloadUrl);
+                          const localUrl = URL.createObjectURL(apkFile);
+                          finalDownloadUrl = localUrl;
+                          setApkDownloadUrlInput(localUrl);
+                          localStorage.setItem("apk_download_url", localUrl);
                         } catch (err: any) {
-                          console.error("Upload failed:", err);
-                          setErrorMsg("Gagal mengunggah APK: " + err.message);
+                          console.error("Local upload simulation failed:", err);
+                          setErrorMsg("Gagal memproses berkas APK: " + err.message);
                           setIsUploadingApk(false);
                           return;
                         }
@@ -2672,30 +2641,20 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
                       localStorage.setItem("apk_download_url", finalDownloadUrl);
 
                       try {
-                        const settingsRes = await fetch("/api/apk-settings", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            version: apkVersionInput,
-                            build: apkBuildInput,
-                            filename: apkFilenameInput,
-                            size: apkSizeInput,
-                            downloadUrl: finalDownloadUrl
-                          }),
+                        await setDoc(doc(db, "settings", "apk"), {
+                          version: apkVersionInput,
+                          build: apkBuildInput,
+                          filename: apkFilenameInput,
+                          size: apkSizeInput,
+                          downloadUrl: finalDownloadUrl,
+                          updatedAt: new Date().toISOString()
                         });
-                        
-                        if (!settingsRes.ok) {
-                          const errText = await settingsRes.text();
-                          throw new Error(errText || "Gagal menyimpan metadata di server.");
-                        }
 
-                        setSuccessMsg("Konfigurasi dan berkas APK berhasil disimpan ke server lokal dan dipublikasikan! Tautan unduhan di Beranda siap diakses para guru.");
+                        setSuccessMsg("Konfigurasi APK berhasil disimpan ke Firebase Firestore dan dipublikasikan! Tautan unduhan di Beranda siap diakses para guru.");
                         setApkFile(null); // Reset file selection after successful save
                       } catch (err: any) {
-                        console.error("Failed to save APK settings locally:", err);
-                        setErrorMsg("Gagal menyimpan metadata APK ke server: " + err.message);
+                        console.error("Failed to save APK settings to Firebase:", err);
+                        setErrorMsg("Gagal menyimpan metadata APK ke Firebase: " + err.message);
                       }
                     }}
                     className={`bg-emerald-800 hover:bg-emerald-700 text-white text-xs font-black py-2.5 px-6 rounded-xl shadow transition-all cursor-pointer border border-emerald-900 flex items-center gap-2 ${

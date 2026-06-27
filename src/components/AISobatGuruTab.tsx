@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { db, auth } from "../lib/firebase";
 import { collection, addDoc, query, where, getDocs } from "firebase/firestore";
+import { GoogleGenAI } from "@google/genai";
 import { 
   Send, 
   Sparkles, 
@@ -180,23 +181,47 @@ export default function AISobatGuruTab({ onShareToArticles }: AISobatGuruTabProp
         text: m.text
       }));
 
-      const res = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          message: textToSend,
-          history: historyPayload
-        })
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("custom_gemini_api_key") || "";
+      if (!apiKey) {
+        throw new Error("Kunci API Gemini tidak ditemukan. Harap pastikan VITE_GEMINI_API_KEY terkonfigurasi di panel Secrets.");
+      }
+      const ai = new GoogleGenAI({ apiKey });
+
+      const systemInstruction = 
+        "Anda adalah AI Sobat Guru PAI, asisten AI khusus untuk guru Pendidikan Agama Islam (PAI) tingkat SMP (Sekolah Menengah Pertama) di Indonesia. " +
+        "Tugas Anda adalah membantu guru merancang modul ajar, rencana pelaksanaan pembelajaran (RPP) Kurikulum Merdeka atau Kurikulum 2013, " +
+        "membuat butir soal ujian/kuis interaktif, memberikan ide metode pembelajaran inovatif yang menyenangkan (seperti gamifikasi, diskusi kelompok, atau kisah teladan), " +
+        "serta menjelaskan konsep-konsep materi PAI SMP (Al-Qur'an Hadis, Aqidah, Akhlak, Fiqih, Sejarah Peradaban Islam/SPI) secara mendalam namun mudah dipahami anak usia SMP. " +
+        "Jawablah selalu dalam bahasa Indonesia yang ramah, profesional, solutif, praktis, dan penuh rasa hormat kepada para guru pejuang pendidikan. " +
+        "Berikan contoh-contoh praktis, tabel, atau pemformatan Markdown yang rapi agar guru dapat langsung meng-copy bagian yang mereka butuhkan.";
+
+      // Format chat history for contents
+      const contents: any[] = [];
+      if (historyPayload && Array.isArray(historyPayload)) {
+        historyPayload.forEach((msg: any) => {
+          contents.push({
+            role: msg.role === 'user' ? 'user' : 'model',
+            parts: [{ text: msg.text }]
+          });
+        });
+      }
+      
+      // Add current user message
+      contents.push({
+        role: 'user',
+        parts: [{ text: textToSend }]
       });
 
-      if (!res.ok) {
-        throw new Error("Gagal mengambil respon dari AI Sobat Guru. Pastikan Server Anda bekerja.");
-      }
+      const response = await ai.models.generateContent({
+        model: "gemini-3.5-flash",
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.7,
+        }
+      });
 
-      const data = await res.json();
-      const responseText = data.text || "";
+      const responseText = response.text || "";
 
       // Estimate tokens based on character count: ~1 token per 3 characters for Indonesian text
       const promptTokensCount = Math.max(12, Math.ceil(textToSend.length / 3) + 5);

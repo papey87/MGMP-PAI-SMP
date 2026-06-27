@@ -70,35 +70,35 @@ export default function BerandaTab({ news, onSelectNews, onChangeTab, articles =
   const [apkDownloadUrl, setApkDownloadUrl] = useState(() => localStorage.getItem("apk_download_url") || "/uploads/app-release.apk");
 
   useEffect(() => {
-    fetch("/api/apk-settings")
-      .then(res => res.json())
-      .then(data => {
-        if (data) {
-          if (data.version) {
-            setApkVersion(data.version);
-            localStorage.setItem("apk_version", data.version);
-          }
-          if (data.build) {
-            setApkBuild(data.build);
-            localStorage.setItem("apk_build", data.build);
-          }
-          if (data.filename) {
-            setApkFilename(data.filename);
-            localStorage.setItem("apk_filename", data.filename);
-          }
-          if (data.size) {
-            setApkSize(data.size);
-            localStorage.setItem("apk_size", data.size);
-          }
-          if (data.downloadUrl) {
-            setApkDownloadUrl(data.downloadUrl);
-            localStorage.setItem("apk_download_url", data.downloadUrl);
-          }
+    const docRef = doc(db, "settings", "apk");
+    const unsub = onSnapshot(docRef, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.version) {
+          setApkVersion(data.version);
+          localStorage.setItem("apk_version", data.version);
         }
-      })
-      .catch(err => {
-        console.warn("Failed to fetch local APK settings on Beranda mount:", err);
-      });
+        if (data.build) {
+          setApkBuild(data.build);
+          localStorage.setItem("apk_build", data.build);
+        }
+        if (data.filename) {
+          setApkFilename(data.filename);
+          localStorage.setItem("apk_filename", data.filename);
+        }
+        if (data.size) {
+          setApkSize(data.size);
+          localStorage.setItem("apk_size", data.size);
+        }
+        if (data.downloadUrl) {
+          setApkDownloadUrl(data.downloadUrl);
+          localStorage.setItem("apk_download_url", data.downloadUrl);
+        }
+      }
+    }, (err) => {
+      console.warn("Failed to fetch Firebase APK settings on Beranda mount:", err);
+    });
+    return () => unsub();
   }, []);
 
   const [layoutConfig, setLayoutConfig] = useState(() => {
