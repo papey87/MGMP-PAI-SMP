@@ -3,7 +3,10 @@ import { Users, Shield, Target, Award, MapPin, BadgeCheck, Plus, Trash2, Edit3, 
 import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
-const STRUKTUR_ORGANISASI = [
+const STRUKTUR_ORGANISASI: any[] = [];
+
+/*
+const MOCK_STRUKTUR_ORGANISASI_MIGRATED = [
   {
     name: "H. Ahmad Fauzi, S.Ag., M.Pd.I.",
     role: "Ketua MGMP PAI SMP",
@@ -53,6 +56,7 @@ const STRUKTUR_ORGANISASI = [
     specialty: "Penyusunan Silabus & Kisi ASAS"
   }
 ];
+*/
 
 const INITIAL_VISI = "Menjadi wadah guru Pendidikan Agama Islam SMP yang profesional, inovatif, solid, dan berintegritas tinggi dalam mencetak figur pendidik teladan guna melahirkan peserta didik yang bertakwa, berakhlak mulia, cerdas luhur, dan moderat.";
 
@@ -76,19 +80,11 @@ export default function ProfilTab() {
   const [isAdmin, setIsAdmin] = useState(() => localStorage.getItem("admin_portal_access") === "true");
 
   // Local Editable States
-  const [profileVisi, setProfileVisi] = useState(() => localStorage.getItem("mgmp_profile_visi") || INITIAL_VISI);
-  const [profileMisi, setProfileMisi] = useState<string[]>(() => {
-    const saved = localStorage.getItem("mgmp_profile_misi");
-    return saved ? JSON.parse(saved) : INITIAL_MISI;
-  });
-  const [profileTujuan, setProfileTujuan] = useState<any[]>(() => {
-    const saved = localStorage.getItem("mgmp_profile_tujuan");
-    return saved ? JSON.parse(saved) : INITIAL_TUJUAN;
-  });
-  const [structureList, setStructureList] = useState<any[]>(() => {
-    const saved = localStorage.getItem("mgmp_profile_structure");
-    return saved ? JSON.parse(saved) : STRUKTUR_ORGANISASI;
-  });
+  const [profileVisi, setProfileVisi] = useState("");
+  const [profileMisi, setProfileMisi] = useState<string[]>([]);
+  const [profileTujuan, setProfileTujuan] = useState<any[]>([]);
+  const [structureList, setStructureList] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // Editor Modals States
   const [isVisiModalOpen, setIsVisiModalOpen] = useState(false);
@@ -151,16 +147,18 @@ export default function ProfilTab() {
           localStorage.setItem("mgmp_profile_structure", JSON.stringify(data.structure));
         }
       } else {
-        // Seed initial values to Firestore if it doesn't exist yet
-        setDoc(docRef, {
-          visi: INITIAL_VISI,
-          misi: INITIAL_MISI,
-          tujuan: INITIAL_TUJUAN,
-          structure: STRUKTUR_ORGANISASI
-        }).catch(err => console.error("Error seeding profile setting doc in ProfilTab:", err));
+        // Document doesn't exist yet, reset states to empty
+        setProfileVisi("");
+        setProfileMisi([]);
+        setProfileTujuan([]);
+        setStructureList([]);
       }
+      setLoading(false);
     }, (err) => {
       console.error("Error listening to profile settings in ProfilTab:", err);
+      if (isMounted) {
+        setLoading(false);
+      }
     });
     return () => {
       isMounted = false;
@@ -342,9 +340,17 @@ export default function ProfilTab() {
         </div>
       </section>
 
-      {/* Visimisi Tab Panel Content */}
-      {activeTab === "visimisi" && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
+      {/* Tab Panel Content */}
+      {loading ? (
+        <div className="py-20 flex flex-col items-center justify-center space-y-3 bg-white border border-slate-100 rounded-2xl shadow-sm">
+          <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs text-slate-500 font-bold">Menghubungkan ke Real-time Database SILADIK...</p>
+        </div>
+      ) : (
+        <>
+          {/* Visimisi Tab Panel Content */}
+          {activeTab === "visimisi" && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
           
           {/* Card: Visi */}
           <div className="p-5 rounded-2xl bg-white border border-slate-100 shadow-sm flex flex-col items-center text-center space-y-3 hover:border-emerald-100 transition-all relative">
@@ -353,7 +359,7 @@ export default function ProfilTab() {
             </div>
             <h3 className="text-base font-bold text-slate-800">Visi Kami</h3>
             <p className="text-xs text-slate-500 leading-relaxed italic">
-              "{profileVisi}"
+              {profileVisi ? `"${profileVisi}"` : "Visi belum dikonfigurasi. Silakan Admin menginisialisasi default melalui Admin Panel."}
             </p>
             {isAdmin && (
               <button 
@@ -397,36 +403,42 @@ export default function ProfilTab() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {profileMisi.map((misi, i) => (
-                <div key={i} className="flex gap-3 items-start p-3 bg-white border border-slate-100 rounded-xl relative group">
-                  <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">
-                    {i+1}
-                  </span>
-                  <div className="pr-12">
-                    <p className="text-xs text-slate-600 leading-relaxed">{misi}</p>
-                  </div>
-                  {isAdmin && (
-                    <div className="absolute top-2 right-2 flex gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => {
-                          setEditingMisiIdx(i);
-                          setTempMisiText(misi);
-                          setIsMisiModalOpen(true);
-                        }}
-                        className="p-1 hover:bg-slate-100 text-emerald-800 rounded cursor-pointer"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteMisi(i)}
-                        className="p-1 hover:bg-red-50 text-red-600 rounded cursor-pointer"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+              {profileMisi.length > 0 ? (
+                profileMisi.map((misi, i) => (
+                  <div key={i} className="flex gap-3 items-start p-3 bg-white border border-slate-100 rounded-xl relative group">
+                    <span className="w-6 h-6 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center text-xs font-bold shrink-0">
+                      {i+1}
+                    </span>
+                    <div className="pr-12">
+                      <p className="text-xs text-slate-600 leading-relaxed">{misi}</p>
                     </div>
-                  )}
+                    {isAdmin && (
+                      <div className="absolute top-2 right-2 flex gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => {
+                            setEditingMisiIdx(i);
+                            setTempMisiText(misi);
+                            setIsMisiModalOpen(true);
+                          }}
+                          className="p-1 hover:bg-slate-100 text-emerald-800 rounded cursor-pointer"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteMisi(i)}
+                          className="p-1 hover:bg-red-50 text-red-600 rounded cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-6 text-center text-xs text-slate-400 italic">
+                  Belum ada misi yang ditambahkan.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -457,38 +469,44 @@ export default function ProfilTab() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              {profileTujuan.map((item, i) => (
-                <div key={i} className="p-5 bg-white rounded-xl border border-slate-100 space-y-3 shadow-sm relative group">
-                  <div className="p-2 w-max rounded-lg bg-emerald-50 text-emerald-700">
-                    <Award className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-slate-700">{item.title}</h4>
-                    <p className="text-[11px] text-slate-500 leading-relaxed mt-1">{item.desc}</p>
-                  </div>
-                  {isAdmin && (
-                    <div className="absolute top-3 right-3 flex gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
-                        onClick={() => {
-                          setEditingTujuanIdx(i);
-                          setTempTujuanTitle(item.title);
-                          setTempTujuanDesc(item.desc);
-                          setIsTujuanModalOpen(true);
-                        }}
-                        className="p-1 hover:bg-slate-100 text-emerald-800 rounded cursor-pointer"
-                      >
-                        <Edit3 className="w-3 h-3" />
-                      </button>
-                      <button 
-                        onClick={() => handleDeleteTujuan(i)}
-                        className="p-1 hover:bg-red-50 text-red-600 rounded cursor-pointer"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                      </button>
+              {profileTujuan.length > 0 ? (
+                profileTujuan.map((item, i) => (
+                  <div key={i} className="p-5 bg-white rounded-xl border border-slate-100 space-y-3 shadow-sm relative group">
+                    <div className="p-2 w-max rounded-lg bg-emerald-50 text-emerald-700">
+                      <Award className="w-5 h-5" />
                     </div>
-                  )}
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-700">{item.title}</h4>
+                      <p className="text-[11px] text-slate-500 leading-relaxed mt-1">{item.desc}</p>
+                    </div>
+                    {isAdmin && (
+                      <div className="absolute top-3 right-3 flex gap-1 opacity-10 md:opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                          onClick={() => {
+                            setEditingTujuanIdx(i);
+                            setTempTujuanTitle(item.title);
+                            setTempTujuanDesc(item.desc);
+                            setIsTujuanModalOpen(true);
+                          }}
+                          className="p-1 hover:bg-slate-100 text-emerald-800 rounded cursor-pointer"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                        </button>
+                        <button 
+                          onClick={() => handleDeleteTujuan(i)}
+                          className="p-1 hover:bg-red-50 text-red-600 rounded cursor-pointer"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-full py-6 text-center text-xs text-slate-400 italic">
+                  Belum ada sasaran / tujuan strategis yang ditambahkan.
                 </div>
-              ))}
+              )}
             </div>
           </div>
 
@@ -523,90 +541,104 @@ export default function ProfilTab() {
             )}
           </div>
 
-          <div id="committee-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-1">
-            {structureList.map((item, index) => (
-              <div 
-                key={index}
-                className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:border-emerald-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group"
-              >
-                <div className="p-4 flex gap-3.5 items-start">
-                  <div className="relative shrink-0">
-                    {item.avatar ? (
-                      <img 
-                        src={item.avatar} 
-                        alt={item.name} 
-                        className="w-14 h-14 rounded-2xl object-cover ring-2 ring-emerald-100"
-                        referrerPolicy="no-referrer"
-                      />
-                    ) : (
-                      <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center ring-2 ring-emerald-100">
-                        <LucideUser className="w-7 h-7" />
+              {structureList.length > 0 ? (
+                <div id="committee-grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 pt-1">
+                  {structureList.map((item, index) => (
+                    <div 
+                      key={index}
+                      className="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:border-emerald-100 hover:shadow-md transition-all duration-300 flex flex-col justify-between relative group"
+                    >
+                      <div className="p-4 flex gap-3.5 items-start">
+                        <div className="relative shrink-0">
+                          {item.avatar ? (
+                            <img 
+                              src={item.avatar} 
+                              alt={item.name} 
+                              className="w-14 h-14 rounded-2xl object-cover ring-2 ring-emerald-100"
+                              referrerPolicy="no-referrer"
+                            />
+                          ) : (
+                            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center ring-2 ring-emerald-100">
+                              <LucideUser className="w-7 h-7" />
+                            </div>
+                          )}
+                          <span className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-emerald-600 text-white shadow" title="Pengurus Terverifikasi">
+                            <BadgeCheck className="w-3.5 h-3.5" />
+                          </span>
+                        </div>
+                        <div className="space-y-1 pr-4">
+                          <span className="text-[9px] bg-amber-50 text-amber-700 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
+                            {item.role}
+                          </span>
+                          <h4 className="font-bold text-slate-800 text-xs sm:text-sm leading-tight pt-1">
+                            {item.name}
+                          </h4>
+                          <p className="text-[11px] text-slate-500 inline-flex items-center gap-1 font-semibold">
+                            <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                            {item.school}
+                          </p>
+                        </div>
                       </div>
-                    )}
-                    <span className="absolute -bottom-1 -right-1 p-0.5 rounded-full bg-emerald-600 text-white shadow" title="Pengurus Terverifikasi">
-                      <BadgeCheck className="w-3.5 h-3.5" />
-                    </span>
-                  </div>
-                  <div className="space-y-1 pr-4">
-                    <span className="text-[9px] bg-amber-50 text-amber-700 font-extrabold px-2 py-0.5 rounded uppercase tracking-wider">
-                      {item.role}
-                    </span>
-                    <h4 className="font-bold text-slate-800 text-xs sm:text-sm leading-tight pt-1">
-                      {item.name}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 inline-flex items-center gap-1 font-semibold">
-                      <MapPin className="w-2.5 h-2.5 text-slate-400 shrink-0" />
-                      {item.school}
-                    </p>
-                  </div>
-                </div>
 
-                <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
-                  <span className="font-medium">
-                    Keahlian: <strong className="text-emerald-700 font-bold">{item.specialty}</strong>
-                  </span>
-                  <span className="text-slate-450 font-mono">
-                    {item.phone}
-                  </span>
-                </div>
+                      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+                        <span className="font-medium">
+                          Keahlian: <strong className="text-emerald-700 font-bold">{item.specialty}</strong>
+                        </span>
+                        <span className="text-slate-450 font-mono">
+                          {item.phone}
+                        </span>
+                      </div>
 
-                {/* Local Card Controls for Admin sessions */}
-                {isAdmin && (
-                  <div className="absolute top-3 right-3 flex gap-1 opacity-20 group-hover:opacity-100 transition-opacity">
-                    <button 
-                      onClick={() => {
-                        setEditingStructureIdx(index);
-                        setStructureName(item.name);
-                        setStructureRole(item.role);
-                        setStructureSchool(item.school);
-                        setStructureAvatar(item.avatar);
-                        setStructurePhone(item.phone);
-                        setStructureSpecialty(item.specialty);
-                        setIsStructureModalOpen(true);
-                      }}
-                      className="p-1.5 bg-white border shadow-sm hover:bg-slate-100 text-emerald-800 rounded-lg cursor-pointer"
-                      title="Edit Pengurus"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
-                    <button 
-                      onClick={() => handleDeleteStructure(index)}
-                      className="p-1.5 bg-white border shadow-sm hover:bg-red-50 text-red-600 rounded-lg cursor-pointer"
-                      title="Hapus Pengurus"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                      {/* Local Card Controls for Admin sessions */}
+                      {isAdmin && (
+                        <div className="absolute top-3 right-3 flex gap-1 opacity-20 group-hover:opacity-100 transition-opacity">
+                          <button 
+                            onClick={() => {
+                              setEditingStructureIdx(index);
+                              setStructureName(item.name);
+                              setStructureRole(item.role);
+                              setStructureSchool(item.school);
+                              setStructureAvatar(item.avatar);
+                              setStructurePhone(item.phone);
+                              setStructureSpecialty(item.specialty);
+                              setIsStructureModalOpen(true);
+                            }}
+                            className="p-1.5 bg-white border shadow-sm hover:bg-slate-100 text-emerald-800 rounded-lg cursor-pointer"
+                            title="Edit Pengurus"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteStructure(index)}
+                            className="p-1.5 bg-white border shadow-sm hover:bg-red-50 text-red-600 rounded-lg cursor-pointer"
+                            title="Hapus Pengurus"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="py-16 text-center bg-white border border-slate-100 rounded-2xl p-6">
+                  <div className="p-3 w-max rounded-full bg-emerald-50 text-emerald-600 mx-auto mb-3">
+                    <LucideUser className="w-8 h-8" />
                   </div>
-                )}
+                  <h4 className="font-bold text-slate-800 text-sm">Susunan Pengurus Kosong</h4>
+                  <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                    Silakan Admin melakukan inisialisasi default melalui tombol "Inisialisasi Data Default" di Admin Panel, atau tambah pengurus secara manual.
+                  </p>
+                </div>
+              )}
+              
+              <div className="p-6 rounded-xl bg-amber-50/40 border border-amber-200/30 text-center text-xs text-slate-500 max-w-xl mx-auto">
+                📞 Apakah Anda anggota baru dan belum terdaftar dalam grup WhatsApp Resmi MGMP? <br />
+                Silakan hubungi pengurus terkait untuk mendaftarkan NUPTK Anda ke dinas.
               </div>
-            ))}
-          </div>
-          
-          <div className="p-6 rounded-xl bg-amber-50/40 border border-amber-200/30 text-center text-xs text-slate-500 max-w-xl mx-auto">
-            📞 Apakah Anda anggota baru dan belum terdaftar dalam grup WhatsApp Resmi MGMP? <br />
-            Silakan hubungi pengurus terkait untuk mendaftarkan NUPTK Anda ke dinas.
-          </div>
-        </div>
+            </div>
+          )}
+        </>
       )}
 
       {/* MODAL: Edit Visi */}

@@ -414,6 +414,8 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
   const [newMemberSpecialty, setNewMemberSpecialty] = useState("");
   const [editingMemberIndex, setEditingMemberIndex] = useState<number | null>(null);
   const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [seedSuccess, setSeedSuccess] = useState(false);
 
   // Allowed specific admins (as requested: Admin Only)
   const allowedAdminEmails = ["feri.gunawan87@gmail.com"];
@@ -1856,38 +1858,66 @@ export default function AdminTab({ onLogout }: AdminTabProps = {}) {
               <p className="text-xs text-slate-400 font-medium">Kelola visi, misi, sasaran organisasi, dan susunan dewan pengurus harian.</p>
             </div>
 
-            {/* Inner sub-tabs selector */}
-            <div className="flex p-1 bg-slate-120/50 rounded-xl border border-slate-200">
+            {/* Inner sub-tabs selector and default seeding action */}
+            <div className="flex flex-wrap items-center gap-3">
               <button
-                onClick={() => setActiveProfileSubTab("visimisi")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeProfileSubTab === "visimisi"
-                    ? "bg-white text-emerald-800 shadow-sm font-extrabold"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
+                disabled={isSeeding}
+                onClick={async () => {
+                  if (window.confirm("Apakah Anda yakin ingin menyelaraskan/memulihkan data profil & struktur organisasi ke database cloud Firebase?")) {
+                    setIsSeeding(true);
+                    try {
+                      await saveProfileToFirestore(
+                        ADMIN_INITIAL_VISI,
+                        ADMIN_INITIAL_MISI,
+                        ADMIN_INITIAL_TUJUAN,
+                        ADMIN_STRUKTUR_ORGANISASI
+                      );
+                      setSeedSuccess(true);
+                      setTimeout(() => setSeedSuccess(false), 3000);
+                    } catch (err) {
+                      console.error("Error seeding default profile:", err);
+                    } finally {
+                      setIsSeeding(false);
+                    }
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-extrabold px-3 py-1.5 rounded-xl text-[10px] sm:text-[11px] shadow cursor-pointer transition-all hover:scale-102"
               >
-                Visi & Misi
+                {isSeeding ? "Memproses..." : seedSuccess ? "✓ Berhasil Disinkronkan!" : "Inisialisasi Data Default"}
               </button>
-              <button
-                onClick={() => setActiveProfileSubTab("tujuan")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeProfileSubTab === "tujuan"
-                    ? "bg-white text-emerald-800 shadow-sm font-extrabold"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Tujuan / Sasaran
-              </button>
-              <button
-                onClick={() => setActiveProfileSubTab("struktur")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                  activeProfileSubTab === "struktur"
-                    ? "bg-white text-emerald-800 shadow-sm font-extrabold"
-                    : "text-slate-500 hover:text-slate-800"
-                }`}
-              >
-                Pengurus Harian
-              </button>
+
+              <div className="flex p-1 bg-slate-120/50 rounded-xl border border-slate-200">
+                <button
+                  onClick={() => setActiveProfileSubTab("visimisi")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeProfileSubTab === "visimisi"
+                      ? "bg-white text-emerald-800 shadow-sm font-extrabold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Visi & Misi
+                </button>
+                <button
+                  onClick={() => setActiveProfileSubTab("tujuan")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeProfileSubTab === "tujuan"
+                      ? "bg-white text-emerald-800 shadow-sm font-extrabold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Tujuan / Sasaran
+                </button>
+                <button
+                  onClick={() => setActiveProfileSubTab("struktur")}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                    activeProfileSubTab === "struktur"
+                      ? "bg-white text-emerald-800 shadow-sm font-extrabold"
+                      : "text-slate-500 hover:text-slate-800"
+                  }`}
+                >
+                  Pengurus Harian
+                </button>
+              </div>
             </div>
           </div>
 
