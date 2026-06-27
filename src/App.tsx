@@ -236,7 +236,10 @@ export default function App() {
               onClick={() => {
                 setActiveTab("beranda");
                 setSelectedNews(null);
+                setSelectedArticle(null);
+                setIsArtikelFormOpen(false);
                 setIsMobileMenuOpen(false);
+                window.scrollTo({ top: 0, behavior: "smooth" });
               }}
               className="flex items-center gap-3 sm:gap-4 cursor-pointer group"
             >
@@ -461,9 +464,19 @@ export default function App() {
             
             {/* Footer column 1: Organization brand about */}
             <div className="space-y-4 md:col-span-2">
-              <div className="flex items-center gap-3">
-                <LogoMGMP size={44} className="bg-white rounded-full p-0.5" />
-                <h3 className="font-extrabold text-white text-sm md:text-base tracking-wide uppercase">
+              <div 
+                onClick={() => {
+                  setActiveTab("beranda");
+                  setSelectedNews(null);
+                  setSelectedArticle(null);
+                  setIsArtikelFormOpen(false);
+                  setIsMobileMenuOpen(false);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="flex items-center gap-3 cursor-pointer group/footer w-max"
+              >
+                <LogoMGMP size={44} className="bg-white rounded-full p-0.5 group-hover/footer:scale-105 transition-transform duration-300" />
+                <h3 className="font-extrabold text-white text-sm md:text-base tracking-wide uppercase group-hover/footer:text-emerald-400 transition-colors">
                   MGMP PAI SMP KAB. SUBANG
                 </h3>
               </div>

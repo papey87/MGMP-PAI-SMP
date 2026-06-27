@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { collection, onSnapshot, setDoc, doc, updateDoc } from "firebase/firestore";
+import { collection, onSnapshot, setDoc, doc, updateDoc, getDocs } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { MGMPEvent } from "../types";
 import { 
@@ -127,30 +127,49 @@ export default function KegiatanTab() {
   } | null>(null);
 
   useEffect(() => {
-    const colRef = collection(db, "events");
-    const unsub = onSnapshot(colRef, async (querySnap) => {
-      if (!querySnap.empty) {
-        const list: MGMPEvent[] = [];
-        querySnap.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() } as any);
-        });
-        list.sort((a, b) => a.id.localeCompare(b.id));
-        setEvents(list);
-        localStorage.setItem("mgmp_pai_events", JSON.stringify(list));
-      } else {
-        // Seed if empty
-        setEvents(INITIAL_EVENTS);
-        localStorage.setItem("mgmp_pai_events", JSON.stringify(INITIAL_EVENTS));
-        for (const ev of INITIAL_EVENTS) {
-          try {
-            await setDoc(doc(db, "events", ev.id), ev);
-          } catch (e) {
-            console.error("Error seeding event:", ev.id, e);
-          }
+    let isMounted = true;
+    let unsub: (() => void) | null = null;
+
+    const initEvents = async () => {
+      try {
+        const colRef = collection(db, "events");
+        const snapshot = await getDocs(colRef);
+        
+        if (!isMounted) return;
+
+        if (snapshot.empty) {
+          // Seed events in parallel
+          const seedPromises = INITIAL_EVENTS.map((ev) => 
+            setDoc(doc(db, "events", ev.id), ev)
+          );
+          await Promise.all(seedPromises);
         }
+
+        if (!isMounted) return;
+
+        unsub = onSnapshot(colRef, (querySnap) => {
+          if (!isMounted) return;
+          const list: MGMPEvent[] = [];
+          querySnap.forEach((docSnap) => {
+            list.push({ id: docSnap.id, ...docSnap.data() } as any);
+          });
+          list.sort((a, b) => a.id.localeCompare(b.id));
+          setEvents(list);
+          localStorage.setItem("mgmp_pai_events", JSON.stringify(list));
+        }, (err) => {
+          console.error("Firestore listening error on events in KegiatanTab:", err);
+        });
+      } catch (err) {
+        console.error("Error initializing events database in KegiatanTab:", err);
       }
-    });
-    return () => unsub();
+    };
+
+    initEvents();
+
+    return () => {
+      isMounted = false;
+      if (unsub) unsub();
+    };
   }, []);
 
   const handleOpenRegister = (event: MGMPEvent) => {

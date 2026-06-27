@@ -99,7 +99,8 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
 
   // Seed data & listen to Firestore changes
   useEffect(() => {
-    let unsubscribe: () => void = () => {};
+    let isMounted = true;
+    let unsubscribe: (() => void) | null = null;
 
     const initFirebase = async () => {
       try {
@@ -107,12 +108,15 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
         // Ensure some initial records exist in database
         await seedTeachersIfEmpty();
 
+        if (!isMounted) return;
+
         const q = query(
           collection(db, "users"),
           orderBy("nama", "asc")
         );
 
         unsubscribe = onSnapshot(q, (snapshot) => {
+          if (!isMounted) return;
           const list: TeacherData[] = [];
           snapshot.forEach((doc) => {
             list.push({
@@ -123,12 +127,14 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
           setTeachers(list);
           setLoading(false);
         }, (err) => {
-          console.error("Firestore listening error:", err);
+          if (!isMounted) return;
+          console.error("Firestore listening error in SiladikDashboard:", err);
           setError("Gagal memuat data dari database real-time.");
           setLoading(false);
         });
       } catch (e: any) {
-        console.error("Error initializing Database:", e);
+        if (!isMounted) return;
+        console.error("Error initializing Database in SiladikDashboard:", e);
         setError("Gagal meluncurkan sistem integrasi database SILADIK.");
         setLoading(false);
       }
@@ -137,6 +143,7 @@ export default function SiladikDashboard({ onOpenApkInfo }: SiladikDashboardProp
     initFirebase();
 
     return () => {
+      isMounted = false;
       if (unsubscribe) unsubscribe();
     };
   }, []);

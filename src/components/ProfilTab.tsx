@@ -127,8 +127,10 @@ export default function ProfilTab() {
 
   // Firebase Real-time Synchronization for Profile
   useEffect(() => {
+    let isMounted = true;
     const docRef = doc(db, "settings", "profile");
     const unsub = onSnapshot(docRef, (docSnap) => {
+      if (!isMounted) return;
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.visi !== undefined) {
@@ -157,8 +159,13 @@ export default function ProfilTab() {
           structure: STRUKTUR_ORGANISASI
         }).catch(err => console.error("Error seeding profile setting doc in ProfilTab:", err));
       }
+    }, (err) => {
+      console.error("Error listening to profile settings in ProfilTab:", err);
     });
-    return () => unsub();
+    return () => {
+      isMounted = false;
+      unsub();
+    };
   }, []);
 
   const syncProfileToFirestore = async (
