@@ -1,17 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { collection, onSnapshot } from "firebase/firestore";
-import { db } from "../lib/firebase";
-import { NewsItem, MGMPEvent } from "../types";
+import React, { useState } from "react";
+import { NewsItem } from "../types";
+import { useEventsData } from "../contexts/SupabaseContext";
 import {
   Megaphone,
   Clock,
   ArrowRight,
   Bell,
-  Calendar,
   Search,
-  Sparkles,
-  Award,
-  BookOpen
 } from "lucide-react";
 
 interface InformasiTabProps {
@@ -23,43 +18,7 @@ interface InformasiTabProps {
 export default function InformasiTab({ news, onSelectNews, onChangeTab }: InformasiTabProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<string>("Semua");
-  const [latestEvents, setLatestEvents] = useState<MGMPEvent[]>([]);
-
-  // Real-time sync events from Firestore - ensures synchronization with KegiatanTab
-  useEffect(() => {
-    const unsub = onSnapshot(collection(db, "events"), (snapshot) => {
-      const list: MGMPEvent[] = [];
-      snapshot.forEach((docSnap) => {
-        list.push({ id: docSnap.id, ...docSnap.data() } as MGMPEvent);
-      });
-
-      // Sort by id
-      list.sort((a, b) => (a.id || "").localeCompare(b.id || ""));
-
-      if (list.length > 0) {
-        setLatestEvents(list);
-        // Update localStorage for caching
-        try {
-          localStorage.setItem("mgmp_pai_events", JSON.stringify(list));
-        } catch (e) {}
-      } else {
-        // Fallback to localStorage cache
-        const cached = localStorage.getItem("mgmp_pai_events");
-        if (cached) {
-          setLatestEvents(JSON.parse(cached));
-        }
-      }
-    }, (err) => {
-      console.error("Events sync error in InformasiTab:", err);
-      // Fallback to cache on error
-      const cached = localStorage.getItem("mgmp_pai_events");
-      if (cached) {
-        setLatestEvents(JSON.parse(cached));
-      }
-    });
-
-    return () => unsub();
-  }, []);
+  const { events: latestEvents } = useEventsData();
 
   // Filter news items
   const filteredNews = news.filter((item) => {

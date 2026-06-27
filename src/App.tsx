@@ -9,23 +9,17 @@ import AISobatGuruTab from "./components/AISobatGuruTab";
 import AdminTab from "./components/AdminTab";
 import ArtikelTab, { SEED_ARTICLES } from "./components/ArtikelTab";
 import LogoMGMP from "./components/LogoMGMP";
-import { auth } from "./lib/firebase";
-import { onAuthStateChanged } from "firebase/auth";
-import { useMGMP } from "./contexts/MGMPContext";
+import { useMGMP } from "./contexts/SupabaseContext";
 import {
-  GraduationCap,
-  BookOpen,
-  Calendar,
-  Users,
-  Sparkles,
   Home,
   Menu,
   X,
   ArrowLeft,
-  BookOpenCheck,
-  Check,
   FileText,
   Info,
+  Calendar,
+  Users,
+  Sparkles,
   Lock
 } from "lucide-react";
 
@@ -71,7 +65,7 @@ const INITIAL_NEWS: NewsItem[] = [
 ];
 
 export default function App() {
-  // Get real-time data from MGMPContext (Firestore synced across all devices/browsers)
+  // Get real-time data from Supabase context (synced across all devices/browsers)
   const { news, articles, layoutConfig, layoutLoading } = useMGMP();
 
   const [activeTab, setActiveTab] = useState<string>("beranda");
@@ -93,18 +87,7 @@ export default function App() {
     return localStorage.getItem("admin_portal_access") === "true";
   });
 
-  // Automatically reveal admin tab if officially logged in as the authorized admin
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser && currentUser.email === "feri.gunawan87@gmail.com") {
-        setShowAdminTab(true);
-        localStorage.setItem("admin_portal_access", "true");
-      }
-    });
-    return () => unsub();
-  }, []);
-
-  // Validate active tab selection based on real-time layoutConfig from Firestore
+  // Validate active tab selection based on real-time layoutConfig from Supabase
   useEffect(() => {
     if (activeTab === "admin") return;
     const isTabAvailable = (layoutConfig.tabs || []).some((t: any) => t.id === activeTab && t.visible !== false);
@@ -122,7 +105,7 @@ export default function App() {
   const [isArtikelFormOpen, setIsArtikelFormOpen] = useState(false);
   const [artikelFormPreset, setArtikelFormPreset] = useState<{ title: string; content: string } | null>(null);
 
-  // Use news from context (real-time synced from Firestore across all devices)
+  // Use news from context (real-time synced from Supabase across all devices)
   // Fallback to INITIAL_NEWS if context is empty (avoids empty state during loading)
   const newsList = news.length > 0 ? news : INITIAL_NEWS;
   const articlesList = articles.length > 0 ? articles : SEED_ARTICLES;
