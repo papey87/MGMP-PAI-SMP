@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { collection, onSnapshot, setDoc, doc, updateDoc } from "firebase/firestore";
-import { db } from "../lib/firebase";
+import { supabase } from "../lib/supabase";
 import { TeacherResource } from "../types";
 import { 
   Search, 
@@ -169,58 +168,77 @@ export default function PerangkatAjarTab() {
   const [articleContent, setArticleContent] = useState("");
   const [selectedArticleDetail, setSelectedArticleDetail] = useState<any | null>(null);
 
-  // Load from Firestore or fallback
+  // Load from Supabase or fallback
   useEffect(() => {
-    // 1. Subscribe to teaching resources
-    const unsubResources = onSnapshot(collection(db, "resources"), async (snap) => {
-      if (!snap.empty) {
-        const list: TeacherResource[] = [];
-        snap.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() } as any);
-        });
-        list.sort((a, b) => a.id.localeCompare(b.id));
-        setResources(list);
-        localStorage.setItem("mgmp_pai_resources", JSON.stringify(list));
-      } else {
+    const loadData = async () => {
+      // 1. Load teaching resources from Supabase
+      try {
+        const { data: resourcesData, error: resourcesError } = await supabase
+          .from('resources')
+          .select('*');
+
+        if (resourcesError) {
+          throw resourcesError;
+        }
+
+        if (resourcesData && resourcesData.length > 0) {
+          const list = resourcesData as TeacherResource[];
+          list.sort((a, b) => a.id.localeCompare(b.id));
+          setResources(list);
+          localStorage.setItem("mgmp_pai_resources", JSON.stringify(list));
+        } else {
+          // No resources found, seed with initial data
+          setResources(INITIAL_RESOURCES);
+          localStorage.setItem("mgmp_pai_resources", JSON.stringify(INITIAL_RESOURCES));
+          for (const res of INITIAL_RESOURCES) {
+            try {
+              await supabase.from('resources').insert(res);
+            } catch (e) {
+              console.error("Error seeding resource:", res.id, e);
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Error loading resources:", error);
         setResources(INITIAL_RESOURCES);
         localStorage.setItem("mgmp_pai_resources", JSON.stringify(INITIAL_RESOURCES));
-        for (const res of INITIAL_RESOURCES) {
-          try {
-            await setDoc(doc(db, "resources", res.id), res);
-          } catch (e) {
-            console.error("Error seeding resource:", res.id, e);
+      }
+
+      // 2. Load articles from Supabase
+      try {
+        const { data: articlesData, error: articlesError } = await supabase
+          .from('articles')
+          .select('*');
+
+        if (articlesError) {
+          throw articlesError;
+        }
+
+        if (articlesData && articlesData.length > 0) {
+          const list = articlesData as any[];
+          list.sort((a, b) => b.id.localeCompare(a.id)); // Newest first
+          setArticles(list);
+          localStorage.setItem("mgmp_pai_articles", JSON.stringify(list));
+        } else {
+          // No articles found, seed with initial data
+          setArticles(INITIAL_ARTICLES);
+          localStorage.setItem("mgmp_pai_articles", JSON.stringify(INITIAL_ARTICLES));
+          for (const art of INITIAL_ARTICLES) {
+            try {
+              await supabase.from('articles').insert(art);
+            } catch (e) {
+              console.error("Error seeding article:", art.id, e);
+            }
           }
         }
-      }
-    });
-
-    // 2. Subscribe to articles
-    const unsubArticles = onSnapshot(collection(db, "articles"), async (snap) => {
-      if (!snap.empty) {
-        const list: any[] = [];
-        snap.forEach((docSnap) => {
-          list.push({ id: docSnap.id, ...docSnap.data() });
-        });
-        list.sort((a, b) => b.id.localeCompare(a.id)); // Newest first
-        setArticles(list);
-        localStorage.setItem("mgmp_pai_articles", JSON.stringify(list));
-      } else {
+      } catch (error) {
+        console.error("Error loading articles:", error);
         setArticles(INITIAL_ARTICLES);
         localStorage.setItem("mgmp_pai_articles", JSON.stringify(INITIAL_ARTICLES));
-        for (const art of INITIAL_ARTICLES) {
-          try {
-            await setDoc(doc(db, "articles", art.id), art);
-          } catch (e) {
-            console.error("Error seeding article:", art.id, e);
-          }
-        }
       }
-    });
-
-    return () => {
-      unsubResources();
-      unsubArticles();
     };
+
+    loadData();
   }, []);
 
   const [verifiedTeacher] = useState<any | null>(() => {
@@ -395,12 +413,15 @@ export default function PerangkatAjarTab() {
     const resItem = resources.find(r => r.id === id);
     if (resItem?.fileUrl) {
       window.open(resItem.fileUrl, "_blank");
-      
+
       const updated = resources.map((res) => {
         if (res.id === id) {
           const newDl = res.downloads + 1;
-          updateDoc(doc(db, "resources", id), { downloads: newDl })
-            .catch(err => console.error("Failed to sync downloads to Firestore:", err));
+          supabase
+            .from('resources')
+            .update({ downloads: newDl })
+            .eq('id', id)
+            .catch(err => console.error("Failed to sync downloads to Supabase:", err));
           return { ...res, downloads: newDl };
         }
         return res;
@@ -411,14 +432,17 @@ export default function PerangkatAjarTab() {
     }
 
     setDownloadingId(id);
-    
+
     // Simulating a real stream download delay
     setTimeout(() => {
       const updated = resources.map((res) => {
         if (res.id === id) {
           const newDl = res.downloads + 1;
-          updateDoc(doc(db, "resources", id), { downloads: newDl })
-            .catch(err => console.error("Failed to sync downloads to Firestore:", err));
+          supabase
+            .from('resources')
+            .update({ downloads: newDl })
+            .eq('id', id)
+            .catch(err => console.error("Failed to sync downloads to Supabase:", err));
           return { ...res, downloads: newDl };
         }
         return res;
@@ -460,8 +484,10 @@ export default function PerangkatAjarTab() {
     const updated = [nRes, ...resources];
     setResources(updated);
     localStorage.setItem("mgmp_pai_resources", JSON.stringify(updated));
-    setDoc(doc(db, "resources", nRes.id), nRes)
-      .catch((err) => console.error("Failed to sync new resource to Firestore:", err));
+    supabase
+      .from('resources')
+      .insert(nRes)
+      .catch((err) => console.error("Failed to sync new resource to Supabase:", err));
 
     // Form inputs cleanup
     setNewTitle("");
@@ -613,8 +639,10 @@ export default function PerangkatAjarTab() {
                 const updated = [nArt, ...articles];
                 setArticles(updated);
                 localStorage.setItem("mgmp_pai_articles", JSON.stringify(updated));
-                setDoc(doc(db, "articles", nArt.id), nArt)
-                  .catch((err) => console.error("Failed to sync new article to Firestore:", err));
+                supabase
+                  .from('articles')
+                  .insert(nArt)
+                  .catch((err) => console.error("Failed to sync new article to Supabase:", err));
 
                 // Clean up
                 setArticleTitle("");
